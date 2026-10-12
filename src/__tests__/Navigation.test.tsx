@@ -31,9 +31,9 @@ describe('App Navigation and Shell Integration', () => {
     await user.click(venuesNavBtn);
 
     expect(
-      screen.getByRole('heading', { name: /browse educational & civic spaces/i })
+      screen.getByRole('heading', { name: /browse available spaces/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/showing 6 available venues/i)).toBeInTheDocument();
+    expect(screen.getByText(/6 of 6 spaces matching/i)).toBeInTheDocument();
   });
 
   it('navigates to Staff Dashboard from the main navigation', async () => {
@@ -58,7 +58,7 @@ describe('App Navigation and Shell Integration', () => {
     await user.click(ctaBtn);
 
     expect(
-      screen.getByRole('heading', { name: /browse educational & civic spaces/i })
+      screen.getByRole('heading', { name: /browse available spaces/i })
     ).toBeInTheDocument();
   });
 
@@ -92,7 +92,7 @@ describe('App Navigation and Shell Integration', () => {
     await user.click(venuesNavBtn);
 
     expect(
-      screen.getByRole('heading', { name: /browse educational & civic spaces/i })
+      screen.getByRole('heading', { name: /browse available spaces/i })
     ).toBeInTheDocument();
 
     const homeNavBtn = within(nav).getByRole('button', { name: /home/i });

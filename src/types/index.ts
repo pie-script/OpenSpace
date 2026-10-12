@@ -61,4 +61,11 @@ export interface BookingRequest {
   createdAt: string;
 }
 
-export type PageView = 'home' | 'venues' | 'staff';
+export type PageView = 'home' | 'venues' | 'venue-detail' | 'staff';
+
+export interface VenueFilterState {
+  date: string; // YYYY-MM-DD
+  eventType: string; // 'all' or EventType
+  attendance: number | ''; // minimum capacity required
+  facilities: string[]; // selected facility keywords
+}

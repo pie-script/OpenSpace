@@ -18,6 +18,7 @@ import {
 interface HomePageProps {
   venues: Venue[];
   onNavigate: (page: PageView) => void;
+  onSelectVenue?: (venueId: string) => void;
   currentRole: Role;
   onRoleChange: (role: Role) => void;
 }
@@ -25,6 +26,7 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = ({
   venues,
   onNavigate,
+  onSelectVenue,
   currentRole,
   onRoleChange,
 }) => {
@@ -256,7 +258,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <button
                       type="button"
                       className="btn-secondary btn-sm"
-                      onClick={() => onNavigate('venues')}
+                      onClick={() => (onSelectVenue ? onSelectVenue(venue.id) : onNavigate('venues'))}
                     >
                       <span>Explore Space</span>
                       <ArrowRight size={14} />
