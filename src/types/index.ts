@@ -69,3 +69,32 @@ export interface VenueFilterState {
   attendance: number | ''; // minimum capacity required
   facilities: string[]; // selected facility keywords
 }
+
+export interface EventParameters {
+  eventType: EventType;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
+  attendance: number;
+  soundLevel: SoundLevel;
+}
+
+export type RuleViolationType =
+  | 'operatingDays'
+  | 'operatingHours'
+  | 'maxDuration'
+  | 'eventType'
+  | 'maxAttendance'
+  | 'soundLevel';
+
+export interface RuleViolation {
+  rule: RuleViolationType;
+  title: string;
+  explanation: string;
+}
+
+export interface FitCheckResult {
+  isFit: boolean;
+  violations: RuleViolation[];
+  conditions: string[];
+}

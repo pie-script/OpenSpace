@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { PageView, Role, Venue, BookingRequest, VenueFilterState } from './types';
+import type { PageView, Role, Venue, BookingRequest, VenueFilterState, EventParameters } from './types';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
 import { VenuesPage } from './pages/VenuesPage';
 import { VenueDetailPage } from './pages/VenueDetailPage';
 import { StaffDashboardPage } from './pages/StaffDashboardPage';
 import { INITIAL_FILTERS } from './utils/filterVenues';
+import { INITIAL_EVENT_PARAMS } from './utils/checkVenueFit';
 import {
   getStoredVenues,
   getStoredRequests,
@@ -41,6 +42,7 @@ export function App() {
   const [venues, setVenues] = useState<Venue[]>(() => getStoredVenues());
   const [requests, setRequests] = useState<BookingRequest[]>(() => getStoredRequests());
   const [filters, setFilters] = useState<VenueFilterState>(INITIAL_FILTERS);
+  const [eventParams, setEventParams] = useState<EventParameters>(INITIAL_EVENT_PARAMS);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -81,6 +83,11 @@ export function App() {
     showToast('Filters reset to default.');
   };
 
+  const handleResetEventParams = () => {
+    setEventParams(INITIAL_EVENT_PARAMS);
+    showToast('Event parameters reset to default.');
+  };
+
   // Sync role changes to persistent storage
   const handleRoleChange = (newRole: Role) => {
     setCurrentRole(newRole);
@@ -98,6 +105,7 @@ export function App() {
     setRequests(defaults.requests);
     setCurrentRole(defaults.role);
     setFilters(INITIAL_FILTERS);
+    setEventParams(INITIAL_EVENT_PARAMS);
     setRouteState({ page: 'home', venueId: null });
     showToast('Demo data reset: Original sample venues, requests, and roles restored.');
   };
@@ -151,6 +159,9 @@ export function App() {
             filters={filters}
             onFilterChange={setFilters}
             onResetFilters={handleResetFilters}
+            eventParams={eventParams}
+            onEventParamsChange={setEventParams}
+            onResetEventParams={handleResetEventParams}
           />
         )}
 
@@ -160,6 +171,8 @@ export function App() {
             currentRole={currentRole}
             onBack={handleBackToVenues}
             onRoleChange={handleRoleChange}
+            eventParams={eventParams}
+            onEventParamsChange={setEventParams}
           />
         )}
 

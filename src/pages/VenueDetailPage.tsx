@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { Venue, Role } from '../types';
+import type { Venue, Role, EventParameters } from '../types';
+import { checkVenueFit } from '../utils/checkVenueFit';
 import {
   ArrowLeft,
   GraduationCap,
@@ -10,6 +11,7 @@ import {
   Volume2,
   Clock,
   CheckCircle2,
+  XCircle,
   AlertCircle,
   ShieldCheck,
   Calendar,
@@ -18,6 +20,8 @@ import {
   DollarSign,
   Send,
   X,
+  Tag,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface VenueDetailPageProps {
@@ -25,12 +29,16 @@ interface VenueDetailPageProps {
   currentRole: Role;
   onBack: () => void;
   onRoleChange: (role: Role) => void;
+  eventParams: EventParameters;
+  onEventParamsChange: (params: EventParameters) => void;
 }
 
 export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
   venue,
   currentRole,
   onBack,
+  eventParams,
+  onEventParamsChange,
 }) => {
   const [requestModalOpen, setRequestModalOpen] = useState(false);
 
@@ -55,6 +63,9 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
 
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const operatingDayLabels = venue.rules.operatingDays.map((d) => dayNames[d]).join(', ');
+
+  // Evaluate fit against this venue's specific rules
+  const fitResult = checkVenueFit(venue, eventParams);
 
   return (
     <div className="venue-detail-page">
@@ -118,6 +129,203 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                 </span>
               </div>
             </div>
+
+            {/* Interactive Fit Checking Section */}
+            <section
+              className="detail-section fit-evaluation-section"
+              aria-labelledby="fit-evaluator-title"
+            >
+              <div className="detail-section__header-flex">
+                <h2 id="fit-evaluator-title" className="detail-section__title">
+                  Event Rule & Policy Fit Evaluation
+                </h2>
+                <span
+                  className={`fit-status-tag ${
+                    fitResult.isFit ? 'fit-status-tag--fit' : 'fit-status-tag--unfit'
+                  }`}
+                >
+                  {fitResult.isFit ? (
+                    <>
+                      <CheckCircle2 size={15} />
+                      <span>Fits This Space</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={15} />
+                      <span>Not a Fit ({fitResult.violations.length} issues)</span>
+                    </>
+                  )}
+                </span>
+              </div>
+
+              {/* Dynamic Fit Results Banner */}
+              <div
+                className={`fit-result-banner ${
+                  fitResult.isFit ? 'fit-result-banner--fit' : 'fit-result-banner--unfit'
+                }`}
+                role="status"
+              >
+                {fitResult.isFit ? (
+                  <div className="fit-result-banner__content">
+                    <CheckCircle2 size={24} className="fit-result-banner__icon" />
+                    <div>
+                      <h4>✓ Your Event Meets All Rules for This Venue</h4>
+                      <p>
+                        Your schedule ({eventParams.startTime}–{eventParams.endTime}), attendance (
+                        {eventParams.attendance}), and sound level ({eventParams.soundLevel}) fully comply
+                        with {venue.institutionName}’s after-hours booking policy.
+                      </p>
+                      {fitResult.conditions.length > 0 && (
+                        <div className="fit-result-conditions">
+                          <strong>Required Conditions:</strong>
+                          <ul>
+                            {fitResult.conditions.map((c) => (
+                              <li key={c}>{c}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="fit-result-banner__content">
+                    <XCircle size={24} className="fit-result-banner__icon" />
+                    <div>
+                      <h4>✕ Request Incompatible With Venue Policies</h4>
+                      <p>
+                        The event parameters you selected cannot be booked at {venue.name} due to the
+                        following specific policy violations:
+                      </p>
+                      <ul className="fit-violations-list">
+                        {fitResult.violations.map((v) => (
+                          <li key={v.rule} className="fit-violation-item">
+                            <strong>{v.title}:</strong> {v.explanation}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Mini Fit Form to Test Rules Interactively */}
+              <div className="fit-evaluator-controls">
+                <h4 className="fit-evaluator-controls__title">
+                  Adjust Event Parameters to Test Venue Compatibility:
+                </h4>
+                <div className="fit-controls-grid">
+                  <div className="fit-control">
+                    <label htmlFor="detail-event-type">
+                      <Tag size={13} /> Activity:
+                    </label>
+                    <select
+                      id="detail-event-type"
+                      className="fit-control-input"
+                      value={eventParams.eventType}
+                      onChange={(e) =>
+                        onEventParamsChange({
+                          ...eventParams,
+                          eventType: e.target.value as EventParameters['eventType'],
+                        })
+                      }
+                    >
+                      <option value="meeting">Meeting</option>
+                      <option value="workshop">Workshop</option>
+                      <option value="rehearsal">Rehearsal</option>
+                      <option value="performance">Performance</option>
+                      <option value="sports">Sports</option>
+                      <option value="community">Community</option>
+                      <option value="lecture">Lecture</option>
+                    </select>
+                  </div>
+
+                  <div className="fit-control">
+                    <label htmlFor="detail-date">
+                      <Calendar size={13} /> Date:
+                    </label>
+                    <input
+                      id="detail-date"
+                      type="date"
+                      className="fit-control-input"
+                      value={eventParams.date}
+                      onChange={(e) =>
+                        onEventParamsChange({ ...eventParams, date: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="fit-control">
+                    <label htmlFor="detail-start">
+                      <Clock size={13} /> Start:
+                    </label>
+                    <input
+                      id="detail-start"
+                      type="time"
+                      className="fit-control-input"
+                      value={eventParams.startTime}
+                      onChange={(e) =>
+                        onEventParamsChange({ ...eventParams, startTime: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="fit-control">
+                    <label htmlFor="detail-end">
+                      <Clock size={13} /> End:
+                    </label>
+                    <input
+                      id="detail-end"
+                      type="time"
+                      className="fit-control-input"
+                      value={eventParams.endTime}
+                      onChange={(e) =>
+                        onEventParamsChange({ ...eventParams, endTime: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="fit-control">
+                    <label htmlFor="detail-attendance">
+                      <Users size={13} /> Attendance:
+                    </label>
+                    <input
+                      id="detail-attendance"
+                      type="number"
+                      min="1"
+                      className="fit-control-input"
+                      value={eventParams.attendance}
+                      onChange={(e) =>
+                        onEventParamsChange({
+                          ...eventParams,
+                          attendance: Math.max(1, parseInt(e.target.value, 10) || 1),
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="fit-control">
+                    <label htmlFor="detail-sound">
+                      <Volume2 size={13} /> Sound:
+                    </label>
+                    <select
+                      id="detail-sound"
+                      className="fit-control-input"
+                      value={eventParams.soundLevel}
+                      onChange={(e) =>
+                        onEventParamsChange({
+                          ...eventParams,
+                          soundLevel: e.target.value as EventParameters['soundLevel'],
+                        })
+                      }
+                    >
+                      <option value="low">Low (Acoustic)</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="amplified">Amplified</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </section>
 
             {/* Description */}
             <section className="detail-section" aria-labelledby="about-space-title">
@@ -255,14 +463,37 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                 </div>
               </div>
 
+              {/* Fit Summary Badge in Sidebar */}
+              <div
+                className={`sidebar-fit-notice ${
+                  fitResult.isFit ? 'sidebar-fit-notice--fit' : 'sidebar-fit-notice--unfit'
+                }`}
+              >
+                {fitResult.isFit ? (
+                  <>
+                    <CheckCircle2 size={16} />
+                    <span>Meets all venue policies</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle size={16} />
+                    <span>Incompatible with event parameters</span>
+                  </>
+                )}
+              </div>
+
               <button
                 type="button"
-                className="btn-primary btn-block btn-lg"
+                className={`btn-block btn-lg ${
+                  fitResult.isFit ? 'btn-primary' : 'btn-secondary btn-blocked'
+                }`}
                 onClick={() => setRequestModalOpen(true)}
                 aria-label="Request to book this venue"
               >
                 <Send size={18} aria-hidden="true" />
-                <span>Request to Book Space</span>
+                <span>
+                  {fitResult.isFit ? 'Request to Book Space' : 'Request Blocked by Rules'}
+                </span>
               </button>
 
               <div className="booking-card__demo-hint">
@@ -312,20 +543,35 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                 You are preparing to book <strong>{venue.name}</strong> at{' '}
                 <strong>{venue.institutionName}</strong> ($ {venue.hourlyPrice}/hr).
               </p>
+
+              {fitResult.isFit ? (
+                <div className="modal-fit-positive">
+                  <CheckCircle2 size={20} />
+                  <div>
+                    <strong>Rule Fit Verified:</strong> Your event meets all operating hours, sound
+                    levels, and capacity rules for this facility.
+                  </div>
+                </div>
+              ) : (
+                <div className="modal-fit-negative">
+                  <AlertCircle size={20} />
+                  <div>
+                    <strong>Rule Fit Warning:</strong> This event violates campus policies. In Phase 4,
+                    submission is blocked until all policy violations are resolved.
+                  </div>
+                </div>
+              )}
+
               <div className="modal-info-box">
                 <h4>Phase Roadmap Preview:</h4>
                 <ul>
                   <li>
-                    <strong>Phase 2 (Current):</strong> Venue details, rules inspection, and filter
-                    discovery are active.
-                  </li>
-                  <li>
-                    <strong>Phase 3 (Next):</strong> Multi-parameter fit checking will validate your event
-                    hours, attendance, and sound level against this venue’s rules before submission.
+                    <strong>Phase 3 (Active):</strong> Multi-parameter fit checking actively validates
+                    operating hours, duration, sound level, capacity, and activity types.
                   </li>
                   <li>
                     <strong>Phase 4:</strong> Submissions will appear directly in the Institution Staff
-                    dashboard for approval.
+                    dashboard for approval, preventing conflicting bookings.
                   </li>
                 </ul>
               </div>
@@ -344,7 +590,7 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                 className="btn-primary"
                 onClick={() => setRequestModalOpen(false)}
               >
-                Got It
+                Understood
               </button>
             </div>
           </div>

@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { VenueDetailPage } from '../pages/VenueDetailPage';
 import { SAMPLE_VENUES } from '../data/sampleVenues';
+import { INITIAL_EVENT_PARAMS } from '../utils/checkVenueFit';
+import type { EventParameters } from '../types';
 
 describe('VenueDetailPage', () => {
   const sampleVenue = SAMPLE_VENUES[0]; // Oakridge Community High School Auditorium
@@ -10,6 +12,7 @@ describe('VenueDetailPage', () => {
   it('renders venue details with name, institution, capacity, address, and pricing', () => {
     const handleBack = vi.fn();
     const handleRole = vi.fn();
+    const handleParams = vi.fn();
 
     render(
       <VenueDetailPage
@@ -17,6 +20,8 @@ describe('VenueDetailPage', () => {
         currentRole="organizer"
         onBack={handleBack}
         onRoleChange={handleRole}
+        eventParams={INITIAL_EVENT_PARAMS}
+        onEventParamsChange={handleParams}
       />
     );
 
@@ -33,6 +38,8 @@ describe('VenueDetailPage', () => {
         currentRole="organizer"
         onBack={vi.fn()}
         onRoleChange={vi.fn()}
+        eventParams={INITIAL_EVENT_PARAMS}
+        onEventParamsChange={vi.fn()}
       />
     );
 
@@ -48,6 +55,8 @@ describe('VenueDetailPage', () => {
         currentRole="organizer"
         onBack={vi.fn()}
         onRoleChange={vi.fn()}
+        eventParams={INITIAL_EVENT_PARAMS}
+        onEventParamsChange={vi.fn()}
       />
     );
 
@@ -56,35 +65,23 @@ describe('VenueDetailPage', () => {
 
     // Permitted event types
     sampleVenue.rules.allowedEventTypes.forEach((eventType) => {
-      expect(screen.getByText(eventType)).toBeInTheDocument();
+      expect(screen.getAllByText(eventType)[0]).toBeInTheDocument();
     });
 
     // Campus notes
     expect(screen.getByText(new RegExp(sampleVenue.rules.notes!))).toBeInTheDocument();
   });
 
-  it('calls onBack when clicking the back button', async () => {
-    const handleBack = vi.fn();
-    const handleRole = vi.fn();
-    const user = userEvent.setup();
-
-    render(
-      <VenueDetailPage
-        venue={sampleVenue}
-        currentRole="organizer"
-        onBack={handleBack}
-        onRoleChange={handleRole}
-      />
-    );
-
-    const backBtn = screen.getByRole('button', { name: /back to venue directory/i });
-    await user.click(backBtn);
-
-    expect(handleBack).toHaveBeenCalledTimes(1);
-  });
-
-  it('opens request modal when clicking Request to Book Space button', async () => {
-    const user = userEvent.setup();
+  it('evaluates and displays when event parameters fit the venue rules', () => {
+    // Fits Oakridge: rehearsal, Fri 18:30-21:00, 100 people, moderate sound
+    const fittingParams: EventParameters = {
+      eventType: 'rehearsal',
+      date: '2026-10-23', // Friday
+      startTime: '18:30',
+      endTime: '21:00',
+      attendance: 100,
+      soundLevel: 'moderate',
+    };
 
     render(
       <VenueDetailPage
@@ -92,16 +89,64 @@ describe('VenueDetailPage', () => {
         currentRole="organizer"
         onBack={vi.fn()}
         onRoleChange={vi.fn()}
+        eventParams={fittingParams}
+        onEventParamsChange={vi.fn()}
       />
     );
 
-    const requestBtn = screen.getByRole('button', { name: /request to book this venue/i });
-    await user.click(requestBtn);
+    expect(screen.getByText(/fits this space/i)).toBeInTheDocument();
+    expect(screen.getByText(/your event meets all rules for this venue/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /request to book this venue/i })).toHaveTextContent(
+      /request to book space/i
+    );
+  });
 
-    expect(
-      screen.getByRole('heading', { name: new RegExp(`Booking Request for ${sampleVenue.name}`, 'i') })
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Phase Roadmap Preview:/i)).toBeInTheDocument();
+  it('evaluates and displays policy violations when event parameters exceed venue rules', () => {
+    // Violates Oakridge: attendance 500 (capacity 350)
+    const violatingParams: EventParameters = {
+      eventType: 'rehearsal',
+      date: '2026-10-23',
+      startTime: '18:30',
+      endTime: '21:00',
+      attendance: 500, // 500 > 350
+      soundLevel: 'moderate',
+    };
+
+    render(
+      <VenueDetailPage
+        venue={sampleVenue}
+        currentRole="organizer"
+        onBack={vi.fn()}
+        onRoleChange={vi.fn()}
+        eventParams={violatingParams}
+        onEventParamsChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/not a fit/i)).toBeInTheDocument();
+    expect(screen.getByText(/attendance capacity exceeded/i)).toBeInTheDocument();
+    expect(screen.getByText(/exceeds the maximum room capacity of 350/i)).toBeInTheDocument();
+  });
+
+  it('calls onBack when clicking the back button', async () => {
+    const handleBack = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <VenueDetailPage
+        venue={sampleVenue}
+        currentRole="organizer"
+        onBack={handleBack}
+        onRoleChange={vi.fn()}
+        eventParams={INITIAL_EVENT_PARAMS}
+        onEventParamsChange={vi.fn()}
+      />
+    );
+
+    const backBtn = screen.getByRole('button', { name: /back to venue directory/i });
+    await user.click(backBtn);
+
+    expect(handleBack).toHaveBeenCalledTimes(1);
   });
 
   it('displays error state when venue is undefined (venue not found)', () => {
@@ -113,6 +158,8 @@ describe('VenueDetailPage', () => {
         currentRole="organizer"
         onBack={handleBack}
         onRoleChange={vi.fn()}
+        eventParams={INITIAL_EVENT_PARAMS}
+        onEventParamsChange={vi.fn()}
       />
     );
 

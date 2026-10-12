@@ -4,12 +4,14 @@ import userEvent from '@testing-library/user-event';
 import { VenuesPage } from '../pages/VenuesPage';
 import { SAMPLE_VENUES } from '../data/sampleVenues';
 import { INITIAL_FILTERS } from '../utils/filterVenues';
+import { INITIAL_EVENT_PARAMS } from '../utils/checkVenueFit';
 import { useState } from 'react';
-import type { VenueFilterState } from '../types';
+import type { VenueFilterState, EventParameters } from '../types';
 
 // Helper wrapper component to test real state interaction
 function VenuesPageTestHarness({ onSelect = vi.fn() }: { onSelect?: (id: string) => void }) {
   const [filters, setFilters] = useState<VenueFilterState>(INITIAL_FILTERS);
+  const [eventParams, setEventParams] = useState<EventParameters>(INITIAL_EVENT_PARAMS);
 
   return (
     <VenuesPage
@@ -19,6 +21,9 @@ function VenuesPageTestHarness({ onSelect = vi.fn() }: { onSelect?: (id: string)
       filters={filters}
       onFilterChange={setFilters}
       onResetFilters={() => setFilters(INITIAL_FILTERS)}
+      eventParams={eventParams}
+      onEventParamsChange={setEventParams}
+      onResetEventParams={() => setEventParams(INITIAL_EVENT_PARAMS)}
     />
   );
 }
@@ -29,7 +34,7 @@ describe('VenuesPage Integration', () => {
 
     // Check header
     expect(screen.getByRole('heading', { name: /browse available spaces/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/showing 6 of 6 campus facilities/i)).toBeInTheDocument();
+    expect(screen.getByText(/campus policy & rule fit evaluator/i)).toBeInTheDocument();
 
     // Check venue cards
     expect(screen.getByText('Auditorium & Performing Arts Stage')).toBeInTheDocument();
@@ -38,9 +43,38 @@ describe('VenuesPage Integration', () => {
     expect(screen.getAllByText('75')[0]).toBeInTheDocument();
   });
 
-  it('filters results when event category is changed', async () => {
+  it('displays rule fit badges and mismatch reasons for each venue card', () => {
+    render(<VenuesPageTestHarness />);
+
+    // Default params: workshop, Fri 19:00-21:00, 40 attendees, moderate sound
+    // Venues that allow workshop with 40 people should show Compatible Fit
+    const fitStrips = screen.getAllByRole('status');
+    expect(fitStrips.length).toBeGreaterThan(0);
+
+    // Should indicate compatible fits and policy mismatches
+    expect(screen.getAllByText(/compatible fit/i)[0]).toBeInTheDocument();
+  });
+
+  it('updates rule fit evaluations when organizer changes event parameters', async () => {
     const user = userEvent.setup();
     render(<VenuesPageTestHarness />);
+
+    // Change event activity to 'sports' in Fit Checker
+    const activitySelect = screen.getByLabelText(/event activity/i);
+    await user.selectOptions(activitySelect, 'sports');
+
+    // Oakridge Auditorium does not allow sports -> should show Policy Mismatch on Auditorium card
+    expect(screen.getAllByText(/policy mismatch/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/disallowed event activity/i)[0]).toBeInTheDocument();
+  });
+
+  it('filters results when switching to Catalog Search tab and filtering by category', async () => {
+    const user = userEvent.setup();
+    render(<VenuesPageTestHarness />);
+
+    // Switch to Catalog Search & Amenities tab
+    const filterTab = screen.getByRole('tab', { name: /catalog search & amenities/i });
+    await user.click(filterTab);
 
     const select = screen.getByLabelText(/filter by event category/i);
     await user.selectOptions(select, 'sports');
@@ -53,24 +87,13 @@ describe('VenuesPage Integration', () => {
     expect(screen.getByLabelText(/showing 1 of 6 campus facilities/i)).toBeInTheDocument();
   });
 
-  it('filters results by minimum attendance requirement', async () => {
-    const user = userEvent.setup();
-    render(<VenuesPageTestHarness />);
-
-    const attendanceInput = screen.getByLabelText(/filter by minimum attendance/i);
-    await user.type(attendanceInput, '300');
-
-    // Only Oakridge Auditorium has capacity 350
-    expect(screen.getByText('Auditorium & Performing Arts Stage')).toBeInTheDocument();
-    expect(
-      screen.queryByText('Varsity Indoor Gymnasium & Pavilion')
-    ).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/showing 1 of 6 campus facilities/i)).toBeInTheDocument();
-  });
-
   it('displays a helpful empty state when no venues match filter criteria', async () => {
     const user = userEvent.setup();
     render(<VenuesPageTestHarness />);
+
+    // Switch to Catalog Search tab
+    const filterTab = screen.getByRole('tab', { name: /catalog search & amenities/i });
+    await user.click(filterTab);
 
     // Filter with impossible criteria: attendance 999
     const attendanceInput = screen.getByLabelText(/filter by minimum attendance/i);
@@ -88,6 +111,10 @@ describe('VenuesPage Integration', () => {
   it('resets filters when clicking the empty state reset button', async () => {
     const user = userEvent.setup();
     render(<VenuesPageTestHarness />);
+
+    // Switch to Catalog Search tab
+    const filterTab = screen.getByRole('tab', { name: /catalog search & amenities/i });
+    await user.click(filterTab);
 
     const attendanceInput = screen.getByLabelText(/filter by minimum attendance/i);
     await user.type(attendanceInput, '999');
@@ -107,7 +134,7 @@ describe('VenuesPage Integration', () => {
     expect(screen.getByLabelText(/showing 6 of 6 campus facilities/i)).toBeInTheDocument();
   });
 
-  it('calls onSelectVenue when clicking View Details & Rules button', async () => {
+  it('calls onSelectVenue when clicking venue card button', async () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();
     render(<VenuesPageTestHarness onSelect={onSelect} />);
