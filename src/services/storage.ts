@@ -1,9 +1,55 @@
-import type { Venue, BookingRequest, Role } from '../types';
+import type { Venue, BookingRequest, Role, AppNotification } from '../types';
 import { SAMPLE_VENUES } from '../data/sampleVenues';
 
 const VENUES_KEY = 'openspace_demo_venues_v1';
 const REQUESTS_KEY = 'openspace_demo_requests_v1';
 const ROLE_KEY = 'openspace_demo_role_v1';
+const NOTIFICATIONS_KEY = 'openspace_demo_notifications_v1';
+
+export const INITIAL_DEMO_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'notif-01',
+    title: 'Booking Approved: Spring Concert Rehearsal',
+    message: 'Oakridge Community High School approved your reservation for Sunday, Oct 18 (18:30–21:00). Lighting and keycard will be prepared.',
+    timestamp: '2026-10-12T14:30:00Z',
+    read: false,
+    type: 'approved',
+    targetRole: 'organizer',
+    requestId: 'req-demo-01',
+    venueId: 'venue-oakridge-auditorium',
+  },
+  {
+    id: 'notif-02',
+    title: 'Schedule Conflict Overlap Detected',
+    message: '"Community Jazz Workshop & Jam" request conflicts with approved booking "Spring Concert Rehearsal" at Oakridge Auditorium.',
+    timestamp: '2026-10-12T11:05:00Z',
+    read: false,
+    type: 'conflict',
+    targetRole: 'staff',
+    requestId: 'req-demo-04',
+    venueId: 'venue-oakridge-auditorium',
+  },
+  {
+    id: 'notif-03',
+    title: 'Booking Notice: Weekend Game Jam Declined',
+    message: 'Staff declined request: Exceeds lab electrical draw guidelines. Community requests must register with faculty supervisor.',
+    timestamp: '2026-10-10T11:20:00Z',
+    read: true,
+    type: 'declined',
+    targetRole: 'organizer',
+    requestId: 'req-demo-05',
+    venueId: 'venue-lincoln-media-lab',
+  },
+  {
+    id: 'notif-04',
+    title: 'Welcome to OpenSpace Civic Booking',
+    message: 'Browse vetted community facilities or switch to Institution Staff in the top bar to review incoming permit requests.',
+    timestamp: '2026-10-09T08:00:00Z',
+    read: true,
+    type: 'info',
+    targetRole: 'all',
+  },
+];
 
 // Initial realistic demo requests demonstrating all lifecycle states and conflict detection
 export const INITIAL_DEMO_REQUESTS: BookingRequest[] = [
@@ -105,6 +151,7 @@ export const INITIAL_DEMO_REQUESTS: BookingRequest[] = [
 // In-memory fallback if localStorage is unavailable
 let memoryVenues: Venue[] | null = null;
 let memoryRequests: BookingRequest[] | null = null;
+let memoryNotifications: AppNotification[] | null = null;
 let memoryRole: Role = 'organizer';
 
 function hasLocalStorage(): boolean {
@@ -198,11 +245,46 @@ export function saveStoredRole(role: Role): void {
   memoryRole = role;
 }
 
-export function resetToDemoDefaults(): { venues: Venue[]; requests: BookingRequest[]; role: Role } {
+export function getStoredNotifications(): AppNotification[] {
+  if (hasLocalStorage()) {
+    try {
+      const raw = localStorage.getItem(NOTIFICATIONS_KEY);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(INITIAL_DEMO_NOTIFICATIONS));
+    } catch {
+      // Fallback below
+    }
+  }
+  if (!memoryNotifications) {
+    memoryNotifications = [...INITIAL_DEMO_NOTIFICATIONS];
+  }
+  return memoryNotifications;
+}
+
+export function saveStoredNotifications(notifications: AppNotification[]): void {
+  if (hasLocalStorage()) {
+    try {
+      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+    } catch {
+      // Fallback
+    }
+  }
+  memoryNotifications = notifications;
+}
+
+export function resetToDemoDefaults(): {
+  venues: Venue[];
+  requests: BookingRequest[];
+  role: Role;
+  notifications: AppNotification[];
+} {
   if (hasLocalStorage()) {
     try {
       localStorage.setItem(VENUES_KEY, JSON.stringify(SAMPLE_VENUES));
       localStorage.setItem(REQUESTS_KEY, JSON.stringify(INITIAL_DEMO_REQUESTS));
+      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(INITIAL_DEMO_NOTIFICATIONS));
       localStorage.setItem(ROLE_KEY, 'organizer');
     } catch {
       // Fallback
@@ -210,11 +292,13 @@ export function resetToDemoDefaults(): { venues: Venue[]; requests: BookingReque
   }
   memoryVenues = [...SAMPLE_VENUES];
   memoryRequests = [...INITIAL_DEMO_REQUESTS];
+  memoryNotifications = [...INITIAL_DEMO_NOTIFICATIONS];
   memoryRole = 'organizer';
 
   return {
     venues: SAMPLE_VENUES,
     requests: INITIAL_DEMO_REQUESTS,
     role: 'organizer',
+    notifications: INITIAL_DEMO_NOTIFICATIONS,
   };
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import type { PageView, Role } from '../types';
+import type { PageView, Role, AppNotification } from '../types';
 import { RoleSwitcher } from './RoleSwitcher';
+import { NotificationCenter } from './NotificationCenter';
 import { School, Compass, Shield, Menu, X } from 'lucide-react';
 
 interface NavbarProps {
@@ -8,6 +9,11 @@ interface NavbarProps {
   onNavigate: (page: PageView) => void;
   currentRole: Role;
   onRoleChange: (role: Role) => void;
+  notifications?: AppNotification[];
+  onMarkNotificationRead?: (id: string) => void;
+  onMarkAllNotificationsRead?: () => void;
+  onClearNotifications?: () => void;
+  onSelectNotification?: (notification: AppNotification) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,6 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   currentRole,
   onRoleChange,
+  notifications = [],
+  onMarkNotificationRead = () => {},
+  onMarkAllNotificationsRead = () => {},
+  onClearNotifications = () => {},
+  onSelectNotification,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -75,8 +86,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </nav>
 
-        {/* Desktop Role Switcher */}
+        {/* Desktop Actions */}
         <div className="navbar__actions">
+          <NotificationCenter
+            notifications={notifications}
+            currentRole={currentRole}
+            onMarkAsRead={onMarkNotificationRead}
+            onMarkAllAsRead={onMarkAllNotificationsRead}
+            onClearAll={onClearNotifications}
+            onSelectNotification={onSelectNotification}
+          />
           <RoleSwitcher
             currentRole={currentRole}
             onRoleChange={onRoleChange}
@@ -84,8 +103,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           />
         </div>
 
-        {/* Mobile Menu Toggle */}
+        {/* Mobile Header Actions & Menu Toggle */}
         <div className="navbar__mobile-toggle">
+          <NotificationCenter
+            notifications={notifications}
+            currentRole={currentRole}
+            onMarkAsRead={onMarkNotificationRead}
+            onMarkAllAsRead={onMarkAllNotificationsRead}
+            onClearAll={onClearNotifications}
+            onSelectNotification={onSelectNotification}
+          />
           <button
             type="button"
             className="mobile-toggle-btn"

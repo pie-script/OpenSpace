@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Venue, EventParameters, BookingRequest } from '../types';
 import { checkExistingApprovedBooking } from '../utils/conflictDetection';
 import { timeToMinutes } from '../utils/checkVenueFit';
+import {
+  generateRecurringDates,
+  checkRecurringSeriesAvailability,
+} from '../utils/recurringUtils';
 import {
   X,
   Calendar,
@@ -14,6 +18,7 @@ import {
   Send,
   Building,
   FileText,
+  Repeat,
 } from 'lucide-react';
 
 interface BookingRequestModalProps {
@@ -22,7 +27,7 @@ interface BookingRequestModalProps {
   existingRequests: BookingRequest[];
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (request: BookingRequest) => void;
+  onSubmit: (request: BookingRequest | BookingRequest[]) => void;
 }
 
 export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
@@ -37,25 +42,50 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   const [contactEmail, setContactEmail] = useState('');
   const [eventName, setEventName] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
-  const [submittedRequest, setSubmittedRequest] = useState<BookingRequest | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  // Recurring booking settings
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<'weekly' | 'biweekly'>('weekly');
+  const [recurrenceCount, setRecurrenceCount] = useState<number>(4);
+
+  const [submittedSingle, setSubmittedSingle] = useState<BookingRequest | null>(null);
+  const [submittedBatch, setSubmittedBatch] = useState<BookingRequest[] | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Calculate duration and estimated rental cost
   const startMins = timeToMinutes(eventParams.startTime);
   const endMins = timeToMinutes(eventParams.endTime);
   const durationHours = Math.max(0, (endMins - startMins) / 60);
-  const estimatedCost = Math.round(durationHours * venue.hourlyPrice);
+  const sessionCost = Math.round(durationHours * venue.hourlyPrice);
+  const totalOccurrences = isRecurring ? recurrenceCount : 1;
+  const totalCost = sessionCost * totalOccurrences;
 
-  // Check for conflict with existing approved bookings
-  const conflictingApproved = checkExistingApprovedBooking(
+  // Single date conflict check
+  const singleConflict = checkExistingApprovedBooking(
     venue.id,
     eventParams.date,
     eventParams.startTime,
     eventParams.endTime,
     existingRequests
   );
+
+  // Recurring series dates and batch conflict check
+  const recurringDates = useMemo(() => {
+    if (!isRecurring) return [eventParams.date];
+    return generateRecurringDates(eventParams.date, recurrenceFrequency, recurrenceCount);
+  }, [isRecurring, eventParams.date, recurrenceFrequency, recurrenceCount]);
+
+  const seriesCheck = useMemo(() => {
+    return checkRecurringSeriesAvailability(
+      venue.id,
+      recurringDates,
+      eventParams.startTime,
+      eventParams.endTime,
+      existingRequests
+    );
+  }, [venue.id, recurringDates, eventParams.startTime, eventParams.endTime, existingRequests]);
+
+  const hasBlockingConflict = isRecurring ? seriesCheck.hasConflicts : Boolean(singleConflict);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,38 +103,79 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
       setErrorMsg('Please provide a valid contact email address.');
       return;
     }
-    if (conflictingApproved) {
-      setErrorMsg(
-        `Cannot submit: This time slot conflicts with approved booking "${conflictingApproved.eventName}". Please select a different time or date.`
-      );
-      return;
+
+    if (isRecurring) {
+      if (seriesCheck.hasConflicts) {
+        const firstConflict = seriesCheck.occurrences.find((o) => o.hasConflict);
+        setErrorMsg(
+          `Cannot submit: Schedule conflict on ${firstConflict?.date} with "${firstConflict?.conflictingBooking?.eventName}". Please adjust your event parameters.`
+        );
+        return;
+      }
+
+      const seriesId = `series-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+      const batchRequests: BookingRequest[] = recurringDates.map((date, idx) => ({
+        id: `req-${Date.now().toString(36)}-${idx + 1}-${Math.random().toString(36).substring(2, 6)}`,
+        venueId: venue.id,
+        organizerName: organizerName.trim(),
+        contactEmail: contactEmail.trim(),
+        eventName: eventName.trim(),
+        eventType: eventParams.eventType,
+        date,
+        startTime: eventParams.startTime,
+        endTime: eventParams.endTime,
+        attendance: eventParams.attendance,
+        soundLevel: eventParams.soundLevel,
+        status: 'Pending',
+        staffNote: additionalNotes.trim() ? `Organizer Note: ${additionalNotes.trim()}` : undefined,
+        createdAt: new Date().toISOString(),
+        seriesId,
+        recurrenceRule: `${recurrenceFrequency}-${recurrenceCount}`,
+        occurrenceIndex: idx + 1,
+        totalOccurrences: recurringDates.length,
+      }));
+
+      onSubmit(batchRequests);
+      setSubmittedBatch(batchRequests);
+    } else {
+      if (singleConflict) {
+        setErrorMsg(
+          `Cannot submit: This time slot conflicts with approved booking "${singleConflict.eventName}". Please select a different time or date.`
+        );
+        return;
+      }
+
+      const newRequest: BookingRequest = {
+        id: `req-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+        venueId: venue.id,
+        organizerName: organizerName.trim(),
+        contactEmail: contactEmail.trim(),
+        eventName: eventName.trim(),
+        eventType: eventParams.eventType,
+        date: eventParams.date,
+        startTime: eventParams.startTime,
+        endTime: eventParams.endTime,
+        attendance: eventParams.attendance,
+        soundLevel: eventParams.soundLevel,
+        status: 'Pending',
+        staffNote: additionalNotes.trim() ? `Organizer Note: ${additionalNotes.trim()}` : undefined,
+        createdAt: new Date().toISOString(),
+      };
+
+      onSubmit(newRequest);
+      setSubmittedSingle(newRequest);
     }
-
-    const newRequest: BookingRequest = {
-      id: `req-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
-      venueId: venue.id,
-      organizerName: organizerName.trim(),
-      contactEmail: contactEmail.trim(),
-      eventName: eventName.trim(),
-      eventType: eventParams.eventType,
-      date: eventParams.date,
-      startTime: eventParams.startTime,
-      endTime: eventParams.endTime,
-      attendance: eventParams.attendance,
-      soundLevel: eventParams.soundLevel,
-      status: 'Pending',
-      staffNote: additionalNotes.trim() ? `Organizer Note: ${additionalNotes.trim()}` : undefined,
-      createdAt: new Date().toISOString(),
-    };
-
-    onSubmit(newRequest);
-    setSubmittedRequest(newRequest);
   };
 
   const handleFinish = () => {
-    setSubmittedRequest(null);
+    setSubmittedSingle(null);
+    setSubmittedBatch(null);
     onClose();
   };
+
+  const isConfirmed = Boolean(submittedSingle || submittedBatch);
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -119,7 +190,11 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
             <Building size={20} className="modal-header-icon" aria-hidden="true" />
             <div>
               <h3 id="booking-modal-title">
-                {submittedRequest ? 'Booking Request Submitted' : `Request Booking: ${venue.name}`}
+                {isConfirmed
+                  ? submittedBatch
+                    ? 'Recurring Booking Series Submitted'
+                    : 'Booking Request Submitted'
+                  : `Request Booking: ${venue.name}`}
               </h3>
               <p className="modal-subtitle">
                 {venue.institutionName} &bull; ${venue.hourlyPrice}/hr
@@ -129,52 +204,99 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
           <button
             type="button"
             className="modal-close-btn"
-            onClick={submittedRequest ? handleFinish : onClose}
+            onClick={isConfirmed ? handleFinish : onClose}
             aria-label="Close dialog"
           >
             <X size={20} />
           </button>
         </div>
 
-        {submittedRequest ? (
+        {isConfirmed ? (
           /* Confirmation View */
           <div className="modal-body modal-success-state">
             <div className="modal-success-badge">
               <CheckCircle2 size={48} className="success-icon" />
             </div>
-            <h4>Request Successfully Submitted!</h4>
-            <p className="success-reference">
-              Reference ID: <strong>{submittedRequest.id}</strong>
-            </p>
-            <p className="success-description">
-              Your community booking request for <strong>{submittedRequest.eventName}</strong> has been
-              received with status <span className="status-pill status-pill--pending">Pending</span>.
-            </p>
 
-            <div className="summary-card">
-              <div className="summary-row">
-                <span>Facility</span>
-                <strong>{venue.name}</strong>
-              </div>
-              <div className="summary-row">
-                <span>Institution</span>
-                <strong>{venue.institutionName}</strong>
-              </div>
-              <div className="summary-row">
-                <span>Date & Time</span>
-                <strong>
-                  {submittedRequest.date} ({submittedRequest.startTime}–{submittedRequest.endTime})
-                </strong>
-              </div>
-              <div className="summary-row">
-                <span>Estimated Rental</span>
-                <strong>${estimatedCost} ({durationHours} hours)</strong>
-              </div>
-              <div className="summary-row">
-                <span>Contact</span>
-                <strong>{submittedRequest.contactEmail}</strong>
-              </div>
-            </div>
+            {submittedBatch ? (
+              <>
+                <h4>Recurring Series Successfully Submitted!</h4>
+                <p className="success-reference">
+                  Series Reference: <strong>{submittedBatch[0].seriesId}</strong> ({submittedBatch.length} occurrences)
+                </p>
+                <p className="success-description">
+                  Your recurring series for <strong>{submittedBatch[0].eventName}</strong> has been received with status{' '}
+                  <span className="status-pill status-pill--pending">Pending</span> for staff review.
+                </p>
+
+                <div className="summary-card">
+                  <div className="summary-row">
+                    <span>Facility</span>
+                    <strong>{venue.name}</strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Recurring Schedule</span>
+                    <strong>
+                      {submittedBatch.length} sessions ({eventParams.startTime}–{eventParams.endTime})
+                    </strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Dates in Series</span>
+                    <strong>
+                      {submittedBatch.map((b) => b.date).join(', ')}
+                    </strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Total Estimated Rental</span>
+                    <strong>
+                      ${totalCost} ({submittedBatch.length} &times; ${sessionCost})
+                    </strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Contact</span>
+                    <strong>{submittedBatch[0].contactEmail}</strong>
+                  </div>
+                </div>
+              </>
+            ) : submittedSingle ? (
+              <>
+                <h4>Request Successfully Submitted!</h4>
+                <p className="success-reference">
+                  Reference ID: <strong>{submittedSingle.id}</strong>
+                </p>
+                <p className="success-description">
+                  Your community booking request for <strong>{submittedSingle.eventName}</strong> has been
+                  received with status <span className="status-pill status-pill--pending">Pending</span>.
+                </p>
+
+                <div className="summary-card">
+                  <div className="summary-row">
+                    <span>Facility</span>
+                    <strong>{venue.name}</strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Institution</span>
+                    <strong>{venue.institutionName}</strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Date & Time</span>
+                    <strong>
+                      {submittedSingle.date} ({submittedSingle.startTime}–{submittedSingle.endTime})
+                    </strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Estimated Rental</span>
+                    <strong>
+                      ${sessionCost} ({durationHours} hours)
+                    </strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Contact</span>
+                    <strong>{submittedSingle.contactEmail}</strong>
+                  </div>
+                </div>
+              </>
+            ) : null}
 
             <div className="modal-demo-guidance">
               <p>
@@ -220,27 +342,113 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                 </div>
                 <div className="review-stat review-stat--price">
                   <DollarSign size={14} />
-                  <span>${estimatedCost} est.</span>
+                  <span>
+                    ${totalCost} est. {isRecurring ? `(${recurrenceCount} sessions)` : ''}
+                  </span>
                 </div>
               </div>
 
+              {/* Recurring Booking Options Section */}
+              <div className="recurring-options-panel">
+                <label className="checkbox-control">
+                  <input
+                    type="checkbox"
+                    id="booking-recurring-checkbox"
+                    checked={isRecurring}
+                    onChange={(e) => setIsRecurring(e.target.checked)}
+                  />
+                  <span className="checkbox-label">
+                    <Repeat size={14} aria-hidden="true" />
+                    <strong>Repeat as a recurring booking series</strong>
+                  </span>
+                </label>
+
+                {isRecurring && (
+                  <div className="recurring-settings-grid">
+                    <div className="form-group">
+                      <label htmlFor="recurrence-frequency" className="form-label">
+                        Frequency
+                      </label>
+                      <select
+                        id="recurrence-frequency"
+                        className="form-select"
+                        value={recurrenceFrequency}
+                        onChange={(e) => setRecurrenceFrequency(e.target.value as 'weekly' | 'biweekly')}
+                      >
+                        <option value="weekly">Weekly (Every 7 days)</option>
+                        <option value="biweekly">Bi-weekly (Every 14 days)</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="recurrence-count" className="form-label">
+                        Number of Sessions
+                      </label>
+                      <select
+                        id="recurrence-count"
+                        className="form-select"
+                        value={recurrenceCount}
+                        onChange={(e) => setRecurrenceCount(Number(e.target.value))}
+                      >
+                        <option value="2">2 sessions</option>
+                        <option value="3">3 sessions</option>
+                        <option value="4">4 sessions</option>
+                        <option value="6">6 sessions</option>
+                        <option value="8">8 sessions</option>
+                      </select>
+                    </div>
+
+                    {/* Batch Date Availability Breakdown */}
+                    <div className="recurring-dates-preview form-group--full">
+                      <span className="dates-preview-title">
+                        Series Availability Breakdown ({seriesCheck.availableCount}/{seriesCheck.totalCount} dates open):
+                      </span>
+                      <div className="occurrences-pills-list">
+                        {seriesCheck.occurrences.map((occ) => (
+                          <div
+                            key={occ.date}
+                            className={`occurrence-pill ${
+                              occ.hasConflict ? 'occurrence-pill--conflict' : 'occurrence-pill--available'
+                            }`}
+                          >
+                            <span className="occ-number">#{occ.occurrenceNumber}</span>
+                            <span className="occ-date">{occ.formattedDate}</span>
+                            {occ.hasConflict ? (
+                              <span className="occ-status occ-status--conflict" title={`Conflict: ${occ.conflictingBooking?.eventName}`}>
+                                Overlap: {occ.conflictingBooking?.eventName}
+                              </span>
+                            ) : (
+                              <span className="occ-status occ-status--available">Available</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Conflict Status Banner */}
-              {conflictingApproved ? (
+              {hasBlockingConflict ? (
                 <div className="conflict-alert-banner" role="alert">
                   <AlertTriangle size={20} className="conflict-alert-icon" />
                   <div>
                     <strong>Schedule Conflict Detected</strong>
                     <p>
-                      This venue is already approved for "{conflictingApproved.eventName}" on{' '}
-                      {conflictingApproved.date} from {conflictingApproved.startTime} to{' '}
-                      {conflictingApproved.endTime}. Please adjust your event hours to avoid overlapping.
+                      {isRecurring
+                        ? `One or more dates in this series overlap with an already approved booking. Please adjust your start date or times.`
+                        : `This venue is already approved for "${singleConflict?.eventName}" on ${singleConflict?.date} from ${singleConflict?.startTime} to ${singleConflict?.endTime}. Please adjust your event hours to avoid overlapping.`}
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="slot-available-banner">
                   <CheckCircle2 size={16} />
-                  <span>Schedule slot currently open. No approved conflicts on this date.</span>
+                  <span>
+                    {isRecurring
+                      ? `All ${recurrenceCount} dates in this series are open with no approved schedule conflicts.`
+                      : 'Schedule slot currently open. No approved conflicts on this date.'}
+                  </span>
                 </div>
               )}
 
@@ -337,10 +545,12 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
               <button
                 type="submit"
                 className="btn-primary"
-                disabled={Boolean(conflictingApproved)}
+                disabled={hasBlockingConflict}
               >
                 <Send size={16} />
-                <span>Submit Booking Request</span>
+                <span>
+                  {isRecurring ? `Submit Series (${recurrenceCount} Sessions)` : 'Submit Booking Request'}
+                </span>
               </button>
             </div>
           </form>

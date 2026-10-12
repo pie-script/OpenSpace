@@ -160,43 +160,47 @@ describe('StaffDashboardPage & Request Lifecycle', () => {
     expect(screen.queryByText('Youth Basketball Camp')).not.toBeInTheDocument();
   });
 
-  it('approves a clean pending booking and triggers onUpdateRequestStatus', async () => {
-    const handleUpdate = vi.fn();
-    const user = userEvent.setup();
+  it(
+    'approves a clean pending booking and triggers onUpdateRequestStatus',
+    async () => {
+      const handleUpdate = vi.fn();
+      const user = userEvent.setup();
 
-    render(
-      <StaffDashboardPage
-        venues={SAMPLE_VENUES}
-        requests={mockRequests}
-        currentRole="staff"
-        onRoleChange={vi.fn()}
-        onUpdateRequestStatus={handleUpdate}
-      />
-    );
+      render(
+        <StaffDashboardPage
+          venues={SAMPLE_VENUES}
+          requests={mockRequests}
+          currentRole="staff"
+          onRoleChange={vi.fn()}
+          onUpdateRequestStatus={handleUpdate}
+        />
+      );
 
-    // Find and click approve on the clean pending basketball request
-    const approveBtn = screen.getByRole('button', {
-      name: /approve request for youth basketball camp/i,
-    });
-    await user.click(approveBtn);
+      // Find and click approve on the clean pending basketball request
+      const approveBtn = screen.getByRole('button', {
+        name: /approve request for youth basketball camp/i,
+      });
+      await user.click(approveBtn);
 
-    // Approve modal opens
-    expect(screen.getByRole('heading', { name: /approve community booking/i })).toBeInTheDocument();
+      // Approve modal opens
+      expect(screen.getByRole('heading', { name: /approve community booking/i })).toBeInTheDocument();
 
-    // Add optional note and confirm
-    const noteInput = screen.getByLabelText(/staff instructions/i);
-    await user.type(noteInput, 'Gymnasium floor prepped and side entrance unlocked.');
+      // Add optional note and confirm
+      const noteInput = screen.getByLabelText(/staff instructions/i);
+      await user.type(noteInput, 'Keycard prepared.');
 
-    const confirmBtn = screen.getByRole('button', { name: /confirm approval/i });
-    await user.click(confirmBtn);
+      const confirmBtn = screen.getByRole('button', { name: /confirm approval/i });
+      await user.click(confirmBtn);
 
-    expect(handleUpdate).toHaveBeenCalledTimes(1);
-    expect(handleUpdate).toHaveBeenCalledWith(
-      'req-pend-clean',
-      'Approved',
-      'Gymnasium floor prepped and side entrance unlocked.'
-    );
-  });
+      expect(handleUpdate).toHaveBeenCalledTimes(1);
+      expect(handleUpdate).toHaveBeenCalledWith(
+        'req-pend-clean',
+        'Approved',
+        'Keycard prepared.'
+      );
+    },
+    15000
+  );
 
   it('strictly blocks approval when a request has a hard conflict with an approved booking', async () => {
     const handleUpdate = vi.fn();

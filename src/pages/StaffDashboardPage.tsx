@@ -31,9 +31,16 @@ import {
   RefreshCw,
   Table,
   CalendarDays,
+  Download,
+  Printer,
+  Repeat,
 } from 'lucide-react';
 import { VenueModal } from '../components/VenueModal';
 import { WeeklyCalendarView } from '../components/WeeklyCalendarView';
+import {
+  exportBookingsToCSV,
+  generateBookingsReportSummary,
+} from '../utils/exportUtils';
 
 interface StaffDashboardPageProps {
   venues: Venue[];
@@ -75,6 +82,7 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [actionModal, setActionModal] = useState<ActionModalState | null>(null);
   const [noteInput, setNoteInput] = useState<string>('');
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   // Venue management state
   const [venueModalTarget, setVenueModalTarget] = useState<Venue | null | undefined>(undefined);
@@ -363,23 +371,48 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
               </p>
             </div>
 
-            <div className="view-mode-toggle" role="group" aria-label="Schedule display format">
-              <button
-                type="button"
-                className={`btn-view-toggle ${viewMode === 'table' ? 'btn-view-toggle--active' : ''}`}
-                onClick={() => setViewMode('table')}
-              >
-                <Table size={14} />
-                <span>Table View</span>
-              </button>
-              <button
-                type="button"
-                className={`btn-view-toggle ${viewMode === 'calendar' ? 'btn-view-toggle--active' : ''}`}
-                onClick={() => setViewMode('calendar')}
-              >
-                <CalendarDays size={14} />
-                <span>Weekly Timeline View</span>
-              </button>
+            <div className="dashboard-section-actions">
+              <div className="dashboard-action-buttons">
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm"
+                  onClick={() => exportBookingsToCSV(requests, venues)}
+                  title="Export all requests to CSV"
+                  aria-label="Export bookings to CSV"
+                >
+                  <Download size={14} />
+                  <span>Export CSV</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm"
+                  onClick={() => setReportModalOpen(true)}
+                  title="Generate printable facility usage report"
+                  aria-label="Generate summary report"
+                >
+                  <Printer size={14} />
+                  <span>Summary Report</span>
+                </button>
+              </div>
+
+              <div className="view-mode-toggle" role="group" aria-label="Schedule display format">
+                <button
+                  type="button"
+                  className={`btn-view-toggle ${viewMode === 'table' ? 'btn-view-toggle--active' : ''}`}
+                  onClick={() => setViewMode('table')}
+                >
+                  <Table size={14} />
+                  <span>Table View</span>
+                </button>
+                <button
+                  type="button"
+                  className={`btn-view-toggle ${viewMode === 'calendar' ? 'btn-view-toggle--active' : ''}`}
+                  onClick={() => setViewMode('calendar')}
+                >
+                  <CalendarDays size={14} />
+                  <span>Weekly Timeline View</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -545,7 +578,17 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
                               <User size={13} /> {req.organizerName}
                             </span>
                             <span className="request-email">{req.contactEmail}</span>
-                            <span className="request-id-badge">ID: {req.id}</span>
+                            <div className="request-tags-row">
+                              <span className="request-id-badge">ID: {req.id}</span>
+                              {req.seriesId && (
+                                <span className="recurring-series-badge" title={`Recurring Series: ${req.seriesId}`}>
+                                  <Repeat size={11} aria-hidden="true" />
+                                  <span>
+                                    Series ({req.occurrenceIndex}/{req.totalOccurrences})
+                                  </span>
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
 
@@ -1173,6 +1216,129 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Facility Usage & Financial Summary Report Modal */}
+      {reportModalOpen && (() => {
+        const report = generateBookingsReportSummary(requests, venues);
+        return (
+          <div
+            className="modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-modal-title"
+          >
+            <div className="modal-card modal-card--report">
+              <div className="modal-header">
+                <div className="modal-title-group">
+                  <Printer size={20} className="modal-header-icon" />
+                  <div>
+                    <h3 id="report-modal-title">Facility Booking & Usage Summary Report</h3>
+                    <p className="modal-subtitle">
+                      OpenSpace Civic Facilities &bull; Generated {new Date(report.generatedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setReportModalOpen(false)}
+                  aria-label="Close dialog"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="modal-body report-modal-body">
+                {/* Executive metrics cards */}
+                <div className="report-metrics-grid">
+                  <div className="report-metric-box">
+                    <span className="report-metric-val">{report.totalRequests}</span>
+                    <span className="report-metric-lbl">Total Requests</span>
+                  </div>
+                  <div className="report-metric-box">
+                    <span className="report-metric-val text-emerald">{report.approvedCount}</span>
+                    <span className="report-metric-lbl">Approved Bookings</span>
+                  </div>
+                  <div className="report-metric-box">
+                    <span className="report-metric-val">{report.totalApprovedHours}h</span>
+                    <span className="report-metric-lbl">Approved Hours</span>
+                  </div>
+                  <div className="report-metric-box">
+                    <span className="report-metric-val">{report.totalApprovedAttendance}</span>
+                    <span className="report-metric-lbl">Total Attendees</span>
+                  </div>
+                  <div className="report-metric-box report-metric-box--revenue">
+                    <span className="report-metric-val">${report.totalEstimatedRevenue}</span>
+                    <span className="report-metric-lbl">Estimated Revenue</span>
+                  </div>
+                </div>
+
+                {/* Facility breakdown table */}
+                <h4 className="report-subheading">Facility Usage & Revenue Breakdown</h4>
+                <div className="report-table-wrapper">
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Campus Facility</th>
+                        <th>Institution</th>
+                        <th>Total Bookings</th>
+                        <th>Approved</th>
+                        <th>Hours Used</th>
+                        <th>Est. Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.venueSummaries.map((v) => (
+                        <tr key={v.venueId}>
+                          <td><strong>{v.venueName}</strong></td>
+                          <td>{v.institutionName}</td>
+                          <td>{v.totalBookings}</td>
+                          <td>
+                            <span className="status-pill status-pill--approved">{v.approvedBookings}</span>
+                          </td>
+                          <td>{v.approvedHours} hrs</td>
+                          <td><strong>${v.estimatedRevenue}</strong></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="report-print-hint">
+                  <FileText size={14} />
+                  <span>Use Print / Save PDF to export this executive summary for school board or municipal review.</span>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setReportModalOpen(false)}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => exportBookingsToCSV(requests, venues)}
+                >
+                  <Download size={14} />
+                  <span>Download CSV</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => window.print()}
+                >
+                  <Printer size={15} />
+                  <span>Print / Save as PDF</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

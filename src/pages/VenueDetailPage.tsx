@@ -33,7 +33,7 @@ interface VenueDetailPageProps {
   eventParams: EventParameters;
   onEventParamsChange: (params: EventParameters) => void;
   existingRequests?: BookingRequest[];
-  onRequestSubmit?: (request: BookingRequest) => void;
+  onRequestSubmit?: (request: BookingRequest | BookingRequest[]) => void;
 }
 
 export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({

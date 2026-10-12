@@ -7,6 +7,7 @@ import type {
   BookingStatus,
   VenueFilterState,
   EventParameters,
+  AppNotification,
 } from './types';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
@@ -22,6 +23,8 @@ import {
   saveStoredRequests,
   getStoredRole,
   saveStoredRole,
+  getStoredNotifications,
+  saveStoredNotifications,
   resetToDemoDefaults,
 } from './services/storage';
 import { CheckCircle2, X } from 'lucide-react';
@@ -51,6 +54,7 @@ export function App() {
   const [currentRole, setCurrentRole] = useState<Role>(() => getStoredRole());
   const [venues, setVenues] = useState<Venue[]>(() => getStoredVenues());
   const [requests, setRequests] = useState<BookingRequest[]>(() => getStoredRequests());
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
   const [filters, setFilters] = useState<VenueFilterState>(INITIAL_FILTERS);
   const [eventParams, setEventParams] = useState<EventParameters>(INITIAL_EVENT_PARAMS);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -109,11 +113,75 @@ export function App() {
     );
   };
 
-  const handleCreateBookingRequest = (newRequest: BookingRequest) => {
-    const updated = [newRequest, ...requests];
+  const addNotification = (notif: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => {
+    const newNotif: AppNotification = {
+      ...notif,
+      id: `notif-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+    const updated = [newNotif, ...notifications];
+    setNotifications(updated);
+    saveStoredNotifications(updated);
+  };
+
+  const handleMarkNotificationRead = (id: string) => {
+    const updated = notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
+    setNotifications(updated);
+    saveStoredNotifications(updated);
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+    const updated = notifications.map((n) => ({ ...n, read: true }));
+    setNotifications(updated);
+    saveStoredNotifications(updated);
+    showToast('All notifications marked as read.');
+  };
+
+  const handleClearNotifications = () => {
+    setNotifications([]);
+    saveStoredNotifications([]);
+    showToast('Notifications cleared.');
+  };
+
+  const handleSelectNotification = (notif: AppNotification) => {
+    if (notif.requestId) {
+      if (currentRole === 'staff') {
+        handleNavigate('staff');
+      } else if (notif.venueId) {
+        handleSelectVenue(notif.venueId);
+      }
+    }
+  };
+
+  const handleCreateBookingRequest = (newRequest: BookingRequest | BookingRequest[]) => {
+    const toAdd = Array.isArray(newRequest) ? newRequest : [newRequest];
+    const updated = [...toAdd, ...requests];
     setRequests(updated);
     saveStoredRequests(updated);
-    showToast(`Booking request submitted! Reference: ${newRequest.id}`);
+
+    const first = toAdd[0];
+    if (toAdd.length > 1) {
+      showToast(`Submitted recurring series (${toAdd.length} sessions)! Reference: ${first.seriesId}`);
+      addNotification({
+        title: `Recurring Series Submitted: ${first.eventName}`,
+        message: `Your ${toAdd.length}-session booking request was received with reference ${first.seriesId}.`,
+        type: 'pending',
+        targetRole: 'all',
+        requestId: first.id,
+        venueId: first.venueId,
+      });
+    } else {
+      showToast(`Booking request submitted! Reference: ${first.id}`);
+      addNotification({
+        title: `Booking Request Submitted: ${first.eventName}`,
+        message: `Submitted request for ${first.date} (${first.startTime}–${first.endTime}). Awaiting staff review.`,
+        type: 'pending',
+        targetRole: 'all',
+        requestId: first.id,
+        venueId: first.venueId,
+      });
+    }
   };
 
   const handleUpdateRequestStatus = (
@@ -139,10 +207,34 @@ export function App() {
 
     if (status === 'Approved') {
       showToast(`Approved "${eventTitle}". Slot confirmed.`);
+      addNotification({
+        title: `Booking Approved: ${eventTitle}`,
+        message: `Your booking for "${eventTitle}" on ${targetReq?.date} (${targetReq?.startTime}–${targetReq?.endTime}) was approved!`,
+        type: 'approved',
+        targetRole: 'organizer',
+        requestId,
+        venueId: targetReq?.venueId,
+      });
     } else if (status === 'Declined') {
       showToast(`Declined "${eventTitle}".`);
+      addNotification({
+        title: `Booking Declined: ${eventTitle}`,
+        message: staffNote ? `Declined: ${staffNote}` : `Booking request for "${eventTitle}" was declined by staff.`,
+        type: 'declined',
+        targetRole: 'organizer',
+        requestId,
+        venueId: targetReq?.venueId,
+      });
     } else if (status === 'Cancelled') {
       showToast(`Cancelled "${eventTitle}". Venue slot released.`);
+      addNotification({
+        title: `Booking Cancelled: ${eventTitle}`,
+        message: `Reservation for "${eventTitle}" was cancelled and the venue slot has been released.`,
+        type: 'info',
+        targetRole: 'all',
+        requestId,
+        venueId: targetReq?.venueId,
+      });
     } else if (status === 'Pending') {
       showToast(`Reopened "${eventTitle}" as Pending.`);
     } else {
@@ -177,6 +269,7 @@ export function App() {
     setVenues(defaults.venues);
     setRequests(defaults.requests);
     setCurrentRole(defaults.role);
+    setNotifications(defaults.notifications);
     setFilters(INITIAL_FILTERS);
     setEventParams(INITIAL_EVENT_PARAMS);
     setRouteState({ page: 'home', venueId: null });
@@ -213,6 +306,11 @@ export function App() {
         currentRole={currentRole}
         onRoleChange={handleRoleChange}
         onResetData={handleResetData}
+        notifications={notifications}
+        onMarkNotificationRead={handleMarkNotificationRead}
+        onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+        onClearNotifications={handleClearNotifications}
+        onSelectNotification={handleSelectNotification}
       >
         {routeState.page === 'home' && (
           <HomePage

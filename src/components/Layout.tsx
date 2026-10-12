@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PageView, Role } from '../types';
+import type { PageView, Role, AppNotification } from '../types';
 import { Navbar } from './Navbar';
 import { RoleBanner } from './RoleBanner';
 import { Footer } from './Footer';
@@ -10,6 +10,11 @@ interface LayoutProps {
   currentRole: Role;
   onRoleChange: (role: Role) => void;
   onResetData: () => void;
+  notifications?: AppNotification[];
+  onMarkNotificationRead?: (id: string) => void;
+  onMarkAllNotificationsRead?: () => void;
+  onClearNotifications?: () => void;
+  onSelectNotification?: (notification: AppNotification) => void;
   children: React.ReactNode;
 }
 
@@ -19,6 +24,11 @@ export const Layout: React.FC<LayoutProps> = ({
   currentRole,
   onRoleChange,
   onResetData,
+  notifications,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+  onClearNotifications,
+  onSelectNotification,
   children,
 }) => {
   return (
@@ -29,6 +39,11 @@ export const Layout: React.FC<LayoutProps> = ({
         onNavigate={onNavigate}
         currentRole={currentRole}
         onRoleChange={onRoleChange}
+        notifications={notifications}
+        onMarkNotificationRead={onMarkNotificationRead}
+        onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+        onClearNotifications={onClearNotifications}
+        onSelectNotification={onSelectNotification}
       />
 
       {/* Role Context Notification Banner */}

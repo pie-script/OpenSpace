@@ -59,6 +59,11 @@ export interface BookingRequest {
   status: BookingStatus;
   staffNote?: string;
   createdAt: string;
+  // Recurring series properties
+  seriesId?: string;
+  recurrenceRule?: string;
+  occurrenceIndex?: number;
+  totalOccurrences?: number;
 }
 
 export type PageView = 'home' | 'venues' | 'venue-detail' | 'staff';
@@ -77,6 +82,24 @@ export interface EventParameters {
   endTime: string; // HH:mm
   attendance: number;
   soundLevel: SoundLevel;
+  // Recurrence options
+  isRecurring?: boolean;
+  recurrenceFrequency?: 'weekly' | 'biweekly';
+  recurrenceCount?: number;
+}
+
+export type NotificationType = 'approved' | 'declined' | 'pending' | 'conflict' | 'info';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string; // ISO string
+  read: boolean;
+  type: NotificationType;
+  targetRole?: Role | 'all';
+  requestId?: string;
+  venueId?: string;
 }
 
 export type RuleViolationType =

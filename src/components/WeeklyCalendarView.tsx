@@ -18,6 +18,7 @@ import {
   X,
   Volume2,
   Filter,
+  Repeat,
 } from 'lucide-react';
 
 interface WeeklyCalendarViewProps {
@@ -366,6 +367,16 @@ export const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
                   <span className="detail-label">Event Category</span>
                   <span className="capitalize">{selectedRequest.eventType}</span>
                 </div>
+
+                {selectedRequest.seriesId && (
+                  <div className="event-detail-item">
+                    <span className="detail-label">Recurring Series</span>
+                    <span>
+                      <Repeat size={13} /> Occurrence {selectedRequest.occurrenceIndex || 1} of{' '}
+                      {selectedRequest.totalOccurrences || 'series'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Conflict notice if any */}
