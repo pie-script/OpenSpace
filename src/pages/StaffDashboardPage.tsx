@@ -29,8 +29,11 @@ import {
   Trash2,
   Power,
   RefreshCw,
+  Table,
+  CalendarDays,
 } from 'lucide-react';
 import { VenueModal } from '../components/VenueModal';
+import { WeeklyCalendarView } from '../components/WeeklyCalendarView';
 
 interface StaffDashboardPageProps {
   venues: Venue[];
@@ -66,6 +69,7 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
 }) => {
   const isStaff = currentRole === 'staff';
 
+  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [selectedVenueId, setSelectedVenueId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -348,7 +352,7 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
 
         {/* Requests Management Section */}
         <section className="dashboard-section" aria-labelledby="requests-section-heading">
-          <div className="dashboard-section__header">
+          <div className="dashboard-section__header dashboard-section__header--flex">
             <div>
               <h2 id="requests-section-heading" className="dashboard-section__title">
                 Community Booking Requests & Lifecycle
@@ -358,9 +362,37 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
                 detected to prevent double-booking campus facilities.
               </p>
             </div>
+
+            <div className="view-mode-toggle" role="group" aria-label="Schedule display format">
+              <button
+                type="button"
+                className={`btn-view-toggle ${viewMode === 'table' ? 'btn-view-toggle--active' : ''}`}
+                onClick={() => setViewMode('table')}
+              >
+                <Table size={14} />
+                <span>Table View</span>
+              </button>
+              <button
+                type="button"
+                className={`btn-view-toggle ${viewMode === 'calendar' ? 'btn-view-toggle--active' : ''}`}
+                onClick={() => setViewMode('calendar')}
+              >
+                <CalendarDays size={14} />
+                <span>Weekly Timeline View</span>
+              </button>
+            </div>
           </div>
 
-          {/* Filter Bar */}
+          {viewMode === 'calendar' ? (
+            <WeeklyCalendarView
+              requests={requests}
+              venues={venues}
+              currentRole={currentRole}
+              onUpdateRequestStatus={onUpdateRequestStatus}
+            />
+          ) : (
+            <>
+              {/* Filter Bar */}
           <div className="dashboard-filter-toolbar">
             <div className="dashboard-tabs" role="tablist" aria-label="Filter requests by status">
               <button
@@ -710,7 +742,9 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
               </table>
             </div>
           )}
-        </section>
+        </>
+      )}
+    </section>
 
         {/* Managed Campus Facilities Section */}
         <section className="dashboard-section" aria-labelledby="venues-section-heading">

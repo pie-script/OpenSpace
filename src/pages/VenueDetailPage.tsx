@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Venue, Role, EventParameters, BookingRequest } from '../types';
 import { checkVenueFit } from '../utils/checkVenueFit';
 import { BookingRequestModal } from '../components/BookingRequestModal';
+import { WeeklyCalendarView } from '../components/WeeklyCalendarView';
 import {
   ArrowLeft,
   GraduationCap,
@@ -438,6 +439,22 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                   </div>
                 </div>
               )}
+            </section>
+
+            {/* Weekly Schedule Timeline */}
+            <section className="detail-section" aria-labelledby="venue-schedule-title">
+              <h2 id="venue-schedule-title" className="detail-section__title">
+                Weekly Schedule & Facility Availability
+              </h2>
+              <p className="detail-section__subtitle">
+                Visual timeline showing booked community slots and after-hours availability for this space.
+              </p>
+              <WeeklyCalendarView
+                requests={existingRequests}
+                venues={[venue]}
+                currentRole={currentRole}
+                selectedVenueId={venue.id}
+              />
             </section>
           </main>
 
