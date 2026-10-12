@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import type { Venue, Role, EventParameters } from '../types';
+import type { Venue, Role, EventParameters, BookingRequest } from '../types';
 import { checkVenueFit } from '../utils/checkVenueFit';
+import { BookingRequestModal } from '../components/BookingRequestModal';
 import {
   ArrowLeft,
   GraduationCap,
@@ -19,7 +20,6 @@ import {
   Info,
   DollarSign,
   Send,
-  X,
   Tag,
   AlertTriangle,
 } from 'lucide-react';
@@ -31,6 +31,8 @@ interface VenueDetailPageProps {
   onRoleChange: (role: Role) => void;
   eventParams: EventParameters;
   onEventParamsChange: (params: EventParameters) => void;
+  existingRequests?: BookingRequest[];
+  onRequestSubmit?: (request: BookingRequest) => void;
 }
 
 export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
@@ -39,6 +41,8 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
   onBack,
   eventParams,
   onEventParamsChange,
+  existingRequests = [],
+  onRequestSubmit,
 }) => {
   const [requestModalOpen, setRequestModalOpen] = useState(false);
 
@@ -500,7 +504,7 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                 <Sparkles size={14} />
                 <span>
                   Active Demo Mode ({currentRole === 'organizer' ? 'Organizer' : 'Institution Staff'}):
-                  Request flow validates fit in Phase 3 & submits in Phase 4.
+                  Submitting creates a live Pending request for staff approval and conflict detection.
                 </span>
               </div>
 
@@ -519,83 +523,17 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
         </div>
       </div>
 
-      {/* Interactive Request Information Modal (Phase 2 -> Phase 3/4 bridge) */}
-      {requestModalOpen && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-          <div className="modal-card">
-            <div className="modal-header">
-              <div className="modal-title-group">
-                <Sparkles size={20} className="modal-sparkle" />
-                <h3 id="modal-title">Booking Request for {venue.name}</h3>
-              </div>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setRequestModalOpen(false)}
-                aria-label="Close dialog"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="modal-body">
-              <p>
-                You are preparing to book <strong>{venue.name}</strong> at{' '}
-                <strong>{venue.institutionName}</strong> ($ {venue.hourlyPrice}/hr).
-              </p>
-
-              {fitResult.isFit ? (
-                <div className="modal-fit-positive">
-                  <CheckCircle2 size={20} />
-                  <div>
-                    <strong>Rule Fit Verified:</strong> Your event meets all operating hours, sound
-                    levels, and capacity rules for this facility.
-                  </div>
-                </div>
-              ) : (
-                <div className="modal-fit-negative">
-                  <AlertCircle size={20} />
-                  <div>
-                    <strong>Rule Fit Warning:</strong> This event violates campus policies. In Phase 4,
-                    submission is blocked until all policy violations are resolved.
-                  </div>
-                </div>
-              )}
-
-              <div className="modal-info-box">
-                <h4>Phase Roadmap Preview:</h4>
-                <ul>
-                  <li>
-                    <strong>Phase 3 (Active):</strong> Multi-parameter fit checking actively validates
-                    operating hours, duration, sound level, capacity, and activity types.
-                  </li>
-                  <li>
-                    <strong>Phase 4:</strong> Submissions will appear directly in the Institution Staff
-                    dashboard for approval, preventing conflicting bookings.
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setRequestModalOpen(false)}
-              >
-                Close Preview
-              </button>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => setRequestModalOpen(false)}
-              >
-                Understood
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Interactive Booking Request Modal (Phase 4) */}
+      <BookingRequestModal
+        venue={venue}
+        eventParams={eventParams}
+        existingRequests={existingRequests}
+        isOpen={requestModalOpen}
+        onClose={() => setRequestModalOpen(false)}
+        onSubmit={(request) => {
+          onRequestSubmit?.(request);
+        }}
+      />
     </div>
   );
 };

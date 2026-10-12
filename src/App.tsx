@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react';
-import type { PageView, Role, Venue, BookingRequest, VenueFilterState, EventParameters } from './types';
+import type {
+  PageView,
+  Role,
+  Venue,
+  BookingRequest,
+  BookingStatus,
+  VenueFilterState,
+  EventParameters,
+} from './types';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
 import { VenuesPage } from './pages/VenuesPage';
@@ -10,6 +18,7 @@ import { INITIAL_EVENT_PARAMS } from './utils/checkVenueFit';
 import {
   getStoredVenues,
   getStoredRequests,
+  saveStoredRequests,
   getStoredRole,
   saveStoredRole,
   resetToDemoDefaults,
@@ -99,6 +108,47 @@ export function App() {
     );
   };
 
+  const handleCreateBookingRequest = (newRequest: BookingRequest) => {
+    const updated = [newRequest, ...requests];
+    setRequests(updated);
+    saveStoredRequests(updated);
+    showToast(`Booking request submitted! Reference: ${newRequest.id}`);
+  };
+
+  const handleUpdateRequestStatus = (
+    requestId: string,
+    status: BookingStatus,
+    staffNote?: string
+  ) => {
+    const updated = requests.map((r) => {
+      if (r.id === requestId) {
+        return {
+          ...r,
+          status,
+          staffNote: staffNote !== undefined ? staffNote : r.staffNote,
+        };
+      }
+      return r;
+    });
+    setRequests(updated);
+    saveStoredRequests(updated);
+
+    const targetReq = requests.find((r) => r.id === requestId);
+    const eventTitle = targetReq ? targetReq.eventName : 'Booking';
+
+    if (status === 'Approved') {
+      showToast(`Approved "${eventTitle}". Slot confirmed.`);
+    } else if (status === 'Declined') {
+      showToast(`Declined "${eventTitle}".`);
+    } else if (status === 'Cancelled') {
+      showToast(`Cancelled "${eventTitle}". Venue slot released.`);
+    } else if (status === 'Pending') {
+      showToast(`Reopened "${eventTitle}" as Pending.`);
+    } else {
+      showToast(`Updated "${eventTitle}".`);
+    }
+  };
+
   const handleResetData = () => {
     const defaults = resetToDemoDefaults();
     setVenues(defaults.venues);
@@ -173,6 +223,8 @@ export function App() {
             onRoleChange={handleRoleChange}
             eventParams={eventParams}
             onEventParamsChange={setEventParams}
+            existingRequests={requests}
+            onRequestSubmit={handleCreateBookingRequest}
           />
         )}
 
@@ -182,6 +234,7 @@ export function App() {
             requests={requests}
             currentRole={currentRole}
             onRoleChange={handleRoleChange}
+            onUpdateRequestStatus={handleUpdateRequestStatus}
           />
         )}
       </Layout>

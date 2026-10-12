@@ -5,7 +5,7 @@ const VENUES_KEY = 'openspace_demo_venues_v1';
 const REQUESTS_KEY = 'openspace_demo_requests_v1';
 const ROLE_KEY = 'openspace_demo_role_v1';
 
-// Initial realistic demo requests to demonstrate staff flow & status tracking
+// Initial realistic demo requests demonstrating all lifecycle states and conflict detection
 export const INITIAL_DEMO_REQUESTS: BookingRequest[] = [
   {
     id: 'req-demo-01',
@@ -52,6 +52,53 @@ export const INITIAL_DEMO_REQUESTS: BookingRequest[] = [
     soundLevel: 'moderate',
     status: 'Pending',
     createdAt: '2026-10-11T16:45:00Z',
+  },
+  {
+    id: 'req-demo-04',
+    venueId: 'venue-oakridge-auditorium',
+    organizerName: 'Oakridge Jazz Society',
+    contactEmail: 'jazz.collective@example.org',
+    eventName: 'Community Jazz Workshop & Jam',
+    eventType: 'workshop',
+    date: '2026-10-18', // Same date and overlapping time with req-demo-01!
+    startTime: '19:00',
+    endTime: '21:30',
+    attendance: 60,
+    soundLevel: 'amplified',
+    status: 'Pending',
+    createdAt: '2026-10-12T11:00:00Z',
+  },
+  {
+    id: 'req-demo-05',
+    venueId: 'venue-lincoln-media-lab',
+    organizerName: 'Indie Game Creators Guild',
+    contactEmail: 'guild@indiegames.example.org',
+    eventName: 'Weekend Game Jam & Showcase',
+    eventType: 'community',
+    date: '2026-10-19',
+    startTime: '18:00',
+    endTime: '21:00',
+    attendance: 35,
+    soundLevel: 'moderate',
+    status: 'Declined',
+    staffNote: 'Denied: Exceeds lab electrical draw guidelines; community requests must register with faculty supervisor.',
+    createdAt: '2026-10-09T18:00:00Z',
+  },
+  {
+    id: 'req-demo-06',
+    venueId: 'venue-greenfield-commons',
+    organizerName: 'Greenfield Garden Coalition',
+    contactEmail: 'gardeners@greenfield.example.org',
+    eventName: 'Autumn Seed Swap & Workshop',
+    eventType: 'community',
+    date: '2026-10-25',
+    startTime: '10:00',
+    endTime: '13:00',
+    attendance: 45,
+    soundLevel: 'low',
+    status: 'Cancelled',
+    staffNote: 'Cancelled by organizer: Rescheduled due to outdoor garden conflict.',
+    createdAt: '2026-10-08T10:00:00Z',
   },
 ];
 
