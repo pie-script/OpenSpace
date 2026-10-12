@@ -3667,3 +3667,391 @@
   background: var(--color-rose-700) !important;
 }
 
+/* ==========================================================================
+   Phase 5 Styles: Staff Venue Listing Management & Controls
+   ========================================================================== */
+
+/* Section header flex */
+.dashboard-section__header--flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Managed Venue Item Enhanced Layout */
+.staff-venue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  gap: 1.25rem;
+}
+
+.staff-venue-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-slate-300);
+}
+
+.staff-venue-item--offline {
+  background: var(--color-slate-50);
+  opacity: 0.85;
+  border-style: dashed;
+}
+
+.staff-venue-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.staff-venue-item__badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.venue-inst-type-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--color-slate-100);
+  color: var(--color-slate-700);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+}
+
+.staff-venue-item__details {
+  font-size: 0.85rem;
+  color: var(--color-slate-600);
+  margin: 0.3rem 0 0.5rem;
+}
+
+.staff-venue-facilities-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.venue-facility-chip {
+  font-size: 0.72rem;
+  background: var(--color-slate-100);
+  color: var(--color-slate-600);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+}
+
+.staff-venue-item__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.venue-controls-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Modal Form for Creating/Editing Venues */
+.modal-card--venue-form {
+  max-width: 760px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.venue-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--color-slate-50);
+  padding: 0 1.5rem;
+}
+
+.venue-modal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-slate-600);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.venue-modal-tab:hover {
+  color: var(--color-slate-900);
+}
+
+.venue-modal-tab--active {
+  color: var(--color-primary-600);
+  border-bottom-color: var(--color-primary-600);
+  background: var(--bg-surface);
+}
+
+.modal-body--venue {
+  overflow-y: auto;
+  max-height: calc(90vh - 160px);
+  padding: 1.5rem;
+}
+
+.form-sections-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-sub-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.form-help-text {
+  font-size: 0.8rem;
+  color: var(--color-slate-500);
+  margin-top: -0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Image Preset Grid */
+.image-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.image-preset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0.35rem;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.image-preset-card img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.4rem;
+}
+
+.image-preset-card span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-slate-700);
+  padding: 0.2rem;
+}
+
+.image-preset-card:hover {
+  border-color: var(--color-slate-400);
+}
+
+.image-preset-card--selected {
+  border-color: var(--color-primary-600);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+/* Facility tags editing */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.facility-edit-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  background: var(--color-primary-50);
+  color: var(--color-primary-800);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.facility-edit-tag button {
+  background: none;
+  border: none;
+  color: var(--color-primary-600);
+  cursor: pointer;
+  display: flex;
+  padding: 0.1rem;
+}
+
+.facility-edit-tag button:hover {
+  color: var(--color-rose-600);
+}
+
+.tag-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tag-input {
+  flex: 1;
+}
+
+.preset-facility-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.chips-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-slate-500);
+}
+
+.chip-suggestion {
+  font-size: 0.75rem;
+  background: var(--color-slate-100);
+  color: var(--color-slate-700);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chip-suggestion:hover {
+  background: var(--color-slate-200);
+  color: var(--color-slate-900);
+}
+
+/* Checkbox label utility */
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-slate-800);
+}
+
+.checkbox-label input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.15rem;
+  accent-color: var(--color-primary-600);
+  cursor: pointer;
+}
+
+.checkbox-label span {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkbox-label small {
+  font-size: 0.78rem;
+  color: var(--color-slate-500);
+  margin-top: 0.15rem;
+}
+
+/* Days Toggle Grid */
+.days-checkbox-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.day-toggle-btn {
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--color-slate-700);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.day-toggle-btn:hover {
+  background: var(--color-slate-100);
+}
+
+.day-toggle-btn--active {
+  background: var(--color-primary-600);
+  color: #fff;
+  border-color: var(--color-primary-600);
+}
+
+/* Event Types Checkbox Grid */
+.event-types-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.event-type-chip-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  font-size: 0.85rem;
+  color: var(--color-slate-800);
+  cursor: pointer;
+}
+
+.event-type-chip-label input[type='checkbox'] {
+  accent-color: var(--color-primary-600);
+}
+
+.event-type-chip-label:hover {
+  background: var(--color-slate-50);
+}
+
+.policy-switches-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background: var(--color-slate-50);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.availability-toggle-box {
+  background: var(--color-slate-50);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+}
+

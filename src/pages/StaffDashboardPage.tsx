@@ -24,7 +24,13 @@ import {
   X,
   FileText,
   Volume2,
+  Plus,
+  Edit3,
+  Trash2,
+  Power,
+  RefreshCw,
 } from 'lucide-react';
+import { VenueModal } from '../components/VenueModal';
 
 interface StaffDashboardPageProps {
   venues: Venue[];
@@ -36,6 +42,9 @@ interface StaffDashboardPageProps {
     status: BookingStatus,
     staffNote?: string
   ) => void;
+  onSaveVenue?: (venue: Venue) => void;
+  onDeleteVenue?: (venueId: string) => void;
+  onResetData?: () => void;
 }
 
 type TabFilter = 'all' | 'pending' | 'conflict' | 'approved' | 'declined' | 'cancelled';
@@ -51,6 +60,9 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
   currentRole,
   onRoleChange,
   onUpdateRequestStatus,
+  onSaveVenue,
+  onDeleteVenue,
+  onResetData,
 }) => {
   const isStaff = currentRole === 'staff';
 
@@ -59,6 +71,33 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [actionModal, setActionModal] = useState<ActionModalState | null>(null);
   const [noteInput, setNoteInput] = useState<string>('');
+
+  // Venue management state
+  const [venueModalTarget, setVenueModalTarget] = useState<Venue | null | undefined>(undefined);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [venueToDelete, setVenueToDelete] = useState<Venue | null>(null);
+
+  const handleToggleVenueAvailability = (venue: Venue) => {
+    if (!onSaveVenue) return;
+    onSaveVenue({
+      ...venue,
+      isAvailable: !venue.isAvailable,
+    });
+  };
+
+  const handleConfirmDeleteVenue = () => {
+    if (venueToDelete && onDeleteVenue) {
+      onDeleteVenue(venueToDelete.id);
+      setVenueToDelete(null);
+    }
+  };
+
+  const handleConfirmResetData = () => {
+    if (onResetData) {
+      onResetData();
+      setConfirmResetOpen(false);
+    }
+  };
 
   // Map requests to conflict data for performance
   const requestsWithConflicts = useMemo(() => {
@@ -675,34 +714,134 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
 
         {/* Managed Campus Facilities Section */}
         <section className="dashboard-section" aria-labelledby="venues-section-heading">
-          <div className="dashboard-section__header">
+          <div className="dashboard-section__header dashboard-section__header--flex">
             <div>
               <h2 id="venues-section-heading" className="dashboard-section__title">
                 Managed Campus Facilities
               </h2>
               <p className="dashboard-section__subtitle">
-                Facilities configured with after-hours availability schedules and policy rules.
+                Facilities configured with after-hours availability schedules, rental rates, and safety rules.
               </p>
+            </div>
+
+            <div className="section-actions-group">
+              {onResetData && (
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm"
+                  onClick={() => setConfirmResetOpen(true)}
+                  title="Reset all demo venues, requests, and role to original state"
+                >
+                  <RefreshCw size={14} />
+                  <span>Reset Demo Data</span>
+                </button>
+              )}
+              {onSaveVenue && (
+                <button
+                  type="button"
+                  className={`btn-primary btn-sm ${!isStaff ? 'btn-action--disabled' : ''}`}
+                  onClick={() => setVenueModalTarget(null)}
+                  disabled={!isStaff}
+                  title={!isStaff ? 'Switch to Institution Staff to add facilities' : 'Add new facility'}
+                  aria-label="Add new campus facility"
+                >
+                  <Plus size={15} />
+                  <span>Add New Space</span>
+                </button>
+              )}
             </div>
           </div>
 
           <div className="staff-venues-list">
             {venues.map((venue) => (
-              <div key={venue.id} className="staff-venue-item">
+              <div
+                key={venue.id}
+                className={`staff-venue-item ${!venue.isAvailable ? 'staff-venue-item--offline' : ''}`}
+              >
                 <div className="staff-venue-item__info">
-                  <span className="staff-venue-item__inst">{venue.institutionName}</span>
+                  <div className="staff-venue-item__badges">
+                    <span className="staff-venue-item__inst">{venue.institutionName}</span>
+                    <span className="venue-inst-type-badge">{venue.institutionType}</span>
+                  </div>
                   <h3 className="staff-venue-item__name">{venue.name}</h3>
                   <p className="staff-venue-item__details">
-                    <span>Capacity: {venue.capacity}</span> &bull;{' '}
+                    <span>Capacity: {venue.capacity} guests</span> &bull;{' '}
                     <span>Rate: ${venue.hourlyPrice}/hr</span> &bull;{' '}
                     <span>
-                      After-Hours: {venue.rules.weekdayHours.start}–{venue.rules.weekdayHours.end}
+                      After-Hours: {venue.rules.weekdayHours.start}–{venue.rules.weekdayHours.end} (Weekdays)
                     </span>
                   </p>
+                  <div className="staff-venue-facilities-strip">
+                    {venue.facilities.slice(0, 4).map((f) => (
+                      <span key={f} className="venue-facility-chip">{f}</span>
+                    ))}
+                    {venue.facilities.length > 4 && (
+                      <span className="venue-facility-chip">+{venue.facilities.length - 4} more</span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="staff-venue-item__status">
-                  <span className="status-pill status-pill--active">Active Listing</span>
+                <div className="staff-venue-item__controls">
+                  <div className="staff-venue-item__status">
+                    <span
+                      className={`status-pill ${
+                        venue.isAvailable ? 'status-pill--active' : 'status-pill--cancelled'
+                      }`}
+                    >
+                      {venue.isAvailable ? 'Active Listing' : 'Unavailable / Offline'}
+                    </span>
+                  </div>
+
+                  <div className="venue-controls-buttons">
+                    {onSaveVenue && (
+                      <>
+                        <button
+                          type="button"
+                          className="btn-action btn-action--note"
+                          onClick={() => setVenueModalTarget(venue)}
+                          disabled={!isStaff}
+                          title={!isStaff ? 'Switch to Staff to edit' : 'Edit facility specifications and rules'}
+                          aria-label={`Edit ${venue.name}`}
+                        >
+                          <Edit3 size={13} />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn-action ${
+                            venue.isAvailable ? 'btn-action--cancel' : 'btn-action--reopen'
+                          }`}
+                          onClick={() => handleToggleVenueAvailability(venue)}
+                          disabled={!isStaff}
+                          title={
+                            !isStaff
+                              ? 'Switch to Staff to toggle'
+                              : venue.isAvailable
+                              ? 'Take facility offline'
+                              : 'Activate facility'
+                          }
+                          aria-label={`Toggle availability for ${venue.name}`}
+                        >
+                          <Power size={13} />
+                          <span>{venue.isAvailable ? 'Deactivate' : 'Activate'}</span>
+                        </button>
+                      </>
+                    )}
+
+                    {onDeleteVenue && (
+                      <button
+                        type="button"
+                        className="btn-action btn-action--decline"
+                        onClick={() => setVenueToDelete(venue)}
+                        disabled={!isStaff}
+                        title={!isStaff ? 'Switch to Staff to delete' : 'Delete facility listing'}
+                        aria-label={`Delete ${venue.name}`}
+                      >
+                        <Trash2 size={13} />
+                        <span>Delete</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -886,6 +1025,116 @@ export const StaffDashboardPage: React.FC<StaffDashboardPageProps> = ({
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Venue Create / Edit Modal */}
+      {venueModalTarget !== undefined && onSaveVenue && (
+        <VenueModal
+          venue={venueModalTarget}
+          isOpen={true}
+          onClose={() => setVenueModalTarget(undefined)}
+          onSave={(savedVenue) => {
+            onSaveVenue(savedVenue);
+            setVenueModalTarget(undefined);
+          }}
+        />
+      )}
+
+      {/* Delete Venue Confirmation Modal */}
+      {venueToDelete && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-venue-modal-title"
+        >
+          <div className="modal-card modal-card--staff-action">
+            <div className="modal-header">
+              <h3 id="delete-venue-modal-title">Delete Facility Listing</h3>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setVenueToDelete(null)}
+                aria-label="Close dialog"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="action-guidance action-guidance--decline">
+                <AlertTriangle size={20} />
+                <p>
+                  Are you sure you want to delete <strong>{venueToDelete.name}</strong> from the campus venue directory?
+                  Organizers will no longer be able to browse or request this facility outside academic hours.
+                </p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setVenueToDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary btn-danger"
+                onClick={handleConfirmDeleteVenue}
+              >
+                Delete Space
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Demo Data Reset Modal */}
+      {confirmResetOpen && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reset-modal-title"
+        >
+          <div className="modal-card modal-card--staff-action">
+            <div className="modal-header">
+              <h3 id="reset-modal-title">Reset Prototype Demo Data</h3>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setConfirmResetOpen(false)}
+                aria-label="Close dialog"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="action-guidance action-guidance--cancel">
+                <RefreshCw size={20} />
+                <p>
+                  This will reset all facility listings, booking requests, and current demo role back to the original sample defaults. Any newly created spaces or booking status edits will be restored.
+                </p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setConfirmResetOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleConfirmResetData}
+              >
+                Confirm Reset
+              </button>
             </div>
           </div>
         </div>

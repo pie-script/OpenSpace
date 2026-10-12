@@ -17,6 +17,7 @@ import { INITIAL_FILTERS } from './utils/filterVenues';
 import { INITIAL_EVENT_PARAMS } from './utils/checkVenueFit';
 import {
   getStoredVenues,
+  saveStoredVenues,
   getStoredRequests,
   saveStoredRequests,
   getStoredRole,
@@ -149,6 +150,28 @@ export function App() {
     }
   };
 
+  const handleSaveVenue = (savedVenue: Venue) => {
+    const existingIndex = venues.findIndex((v) => v.id === savedVenue.id);
+    let updated: Venue[];
+    if (existingIndex >= 0) {
+      updated = venues.map((v) => (v.id === savedVenue.id ? savedVenue : v));
+      showToast(`Updated facility: "${savedVenue.name}".`);
+    } else {
+      updated = [savedVenue, ...venues];
+      showToast(`Published new facility: "${savedVenue.name}".`);
+    }
+    setVenues(updated);
+    saveStoredVenues(updated);
+  };
+
+  const handleDeleteVenue = (venueId: string) => {
+    const target = venues.find((v) => v.id === venueId);
+    const updated = venues.filter((v) => v.id !== venueId);
+    setVenues(updated);
+    saveStoredVenues(updated);
+    showToast(`Deleted facility: "${target ? target.name : venueId}".`);
+  };
+
   const handleResetData = () => {
     const defaults = resetToDemoDefaults();
     setVenues(defaults.venues);
@@ -235,6 +258,9 @@ export function App() {
             currentRole={currentRole}
             onRoleChange={handleRoleChange}
             onUpdateRequestStatus={handleUpdateRequestStatus}
+            onSaveVenue={handleSaveVenue}
+            onDeleteVenue={handleDeleteVenue}
+            onResetData={handleResetData}
           />
         )}
       </Layout>
