@@ -98,7 +98,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     const diff = endMins - startMins;
     if (diff <= 0) return null;
     const hrs = diff / 60;
-    return `${hrs} ${hrs === 1 ? 'hr' : 'hrs'} duration`;
+    return `${hrs} ${hrs === 1 ? 'hr' : 'hrs'}`;
   }, [referenceStartTime, value]);
 
   const displayTime = formatTime12Hour(value);
@@ -129,7 +129,11 @@ export const TimePicker: React.FC<TimePickerProps> = ({
       >
         <Clock size={15} className="time-picker-icon" aria-hidden="true" />
         <span className="time-picker-text">{displayTime}</span>
-        {durationLabel && <span className="time-duration-chip">{durationLabel}</span>}
+        {durationLabel && (
+          <span className="time-duration-chip" title={`Duration: ${durationLabel}`}>
+            {durationLabel}
+          </span>
+        )}
         <ChevronDown size={14} className="time-picker-chevron" aria-hidden="true" />
       </button>
 

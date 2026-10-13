@@ -140,22 +140,27 @@ export const FitCheckerBar: React.FC<FitCheckerBarProps> = ({
 
         {/* Attendance */}
         <div className="fit-checker-field">
-          <label htmlFor="fit-attendance" className="fit-checker-label">
+          <label htmlFor="fit-attendance" className="fit-checker-label" title="Expected Attendance">
             <Users size={14} aria-hidden="true" />
-            <span>Expected Attendance</span>
+            <span>Attendance</span>
           </label>
-          <input
-            id="fit-attendance"
-            type="number"
-            min="1"
-            max="1000"
-            className="fit-checker-input"
-            value={params.attendance}
-            onChange={(e) =>
-              onChange({ ...params, attendance: Math.max(1, parseInt(e.target.value, 10) || 1) })
-            }
-            aria-label="Expected attendance"
-          />
+          <div className="fit-attendance-input-wrap">
+            <input
+              id="fit-attendance"
+              type="number"
+              min="1"
+              max="1000"
+              className="fit-checker-input fit-checker-input--attendance"
+              value={params.attendance}
+              onChange={(e) =>
+                onChange({ ...params, attendance: Math.max(1, parseInt(e.target.value, 10) || 1) })
+              }
+              aria-label="Expected attendance"
+            />
+            <span className="fit-attendance-unit" aria-hidden="true">
+              guests
+            </span>
+          </div>
         </div>
 
         {/* Sound Level */}
