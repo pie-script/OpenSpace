@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ShieldAlert,
 } from 'lucide-react';
+import { TimePicker } from './ui/TimePicker';
 
 interface VenueModalProps {
   venue?: Venue | null; // If null/undefined, in "Create" mode; otherwise "Edit" mode
@@ -530,12 +531,11 @@ export const VenueModal: React.FC<VenueModalProps> = ({
                     <label htmlFor="weekday-start" className="form-label">
                       Weekday Start (After-School)
                     </label>
-                    <input
+                    <TimePicker
                       id="weekday-start"
-                      type="time"
-                      className="form-input"
                       value={weekdayStart}
-                      onChange={(e) => setWeekdayStart(e.target.value)}
+                      onChange={setWeekdayStart}
+                      ariaLabel="Weekday start time"
                     />
                   </div>
 
@@ -543,12 +543,12 @@ export const VenueModal: React.FC<VenueModalProps> = ({
                     <label htmlFor="weekday-end" className="form-label">
                       Weekday End (Evening Curfew)
                     </label>
-                    <input
+                    <TimePicker
                       id="weekday-end"
-                      type="time"
-                      className="form-input"
                       value={weekdayEnd}
-                      onChange={(e) => setWeekdayEnd(e.target.value)}
+                      referenceStartTime={weekdayStart}
+                      onChange={setWeekdayEnd}
+                      ariaLabel="Weekday curfew time"
                     />
                   </div>
 
@@ -556,12 +556,11 @@ export const VenueModal: React.FC<VenueModalProps> = ({
                     <label htmlFor="weekend-start" className="form-label">
                       Weekend Opening Time
                     </label>
-                    <input
+                    <TimePicker
                       id="weekend-start"
-                      type="time"
-                      className="form-input"
                       value={weekendStart}
-                      onChange={(e) => setWeekendStart(e.target.value)}
+                      onChange={setWeekendStart}
+                      ariaLabel="Weekend opening time"
                     />
                   </div>
 
@@ -569,12 +568,12 @@ export const VenueModal: React.FC<VenueModalProps> = ({
                     <label htmlFor="weekend-end" className="form-label">
                       Weekend Curfew Time
                     </label>
-                    <input
+                    <TimePicker
                       id="weekend-end"
-                      type="time"
-                      className="form-input"
                       value={weekendEnd}
-                      onChange={(e) => setWeekendEnd(e.target.value)}
+                      referenceStartTime={weekendStart}
+                      onChange={setWeekendEnd}
+                      ariaLabel="Weekend curfew time"
                     />
                   </div>
 

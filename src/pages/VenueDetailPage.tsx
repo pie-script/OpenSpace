@@ -24,6 +24,8 @@ import {
   Tag,
   AlertTriangle,
 } from 'lucide-react';
+import { DatePicker } from '../components/ui/DatePicker';
+import { TimePicker } from '../components/ui/TimePicker';
 
 interface VenueDetailPageProps {
   venue: Venue | undefined;
@@ -248,14 +250,13 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                     <label htmlFor="detail-date">
                       <Calendar size={13} /> Date:
                     </label>
-                    <input
+                    <DatePicker
                       id="detail-date"
-                      type="date"
-                      className="fit-control-input"
                       value={eventParams.date}
-                      onChange={(e) =>
-                        onEventParamsChange({ ...eventParams, date: e.target.value })
+                      onChange={(date) =>
+                        onEventParamsChange({ ...eventParams, date })
                       }
+                      ariaLabel="Detail event date"
                     />
                   </div>
 
@@ -263,14 +264,13 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                     <label htmlFor="detail-start">
                       <Clock size={13} /> Start:
                     </label>
-                    <input
+                    <TimePicker
                       id="detail-start"
-                      type="time"
-                      className="fit-control-input"
                       value={eventParams.startTime}
-                      onChange={(e) =>
-                        onEventParamsChange({ ...eventParams, startTime: e.target.value })
+                      onChange={(startTime) =>
+                        onEventParamsChange({ ...eventParams, startTime })
                       }
+                      ariaLabel="Detail start time"
                     />
                   </div>
 
@@ -278,14 +278,14 @@ export const VenueDetailPage: React.FC<VenueDetailPageProps> = ({
                     <label htmlFor="detail-end">
                       <Clock size={13} /> End:
                     </label>
-                    <input
+                    <TimePicker
                       id="detail-end"
-                      type="time"
-                      className="fit-control-input"
                       value={eventParams.endTime}
-                      onChange={(e) =>
-                        onEventParamsChange({ ...eventParams, endTime: e.target.value })
+                      referenceStartTime={eventParams.startTime}
+                      onChange={(endTime) =>
+                        onEventParamsChange({ ...eventParams, endTime })
                       }
+                      ariaLabel="Detail end time"
                     />
                   </div>
 

@@ -12,6 +12,9 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+import { DatePicker } from './ui/DatePicker';
+import { TimePicker } from './ui/TimePicker';
+
 interface FitCheckerBarProps {
   params: EventParameters;
   onChange: (params: EventParameters) => void;
@@ -98,13 +101,11 @@ export const FitCheckerBar: React.FC<FitCheckerBarProps> = ({
             <Calendar size={14} aria-hidden="true" />
             <span>Event Date</span>
           </label>
-          <input
+          <DatePicker
             id="fit-date"
-            type="date"
-            className="fit-checker-input"
             value={params.date}
-            onChange={(e) => onChange({ ...params, date: e.target.value })}
-            aria-label="Event date"
+            onChange={(date) => onChange({ ...params, date })}
+            ariaLabel="Event date"
           />
         </div>
 
@@ -114,13 +115,11 @@ export const FitCheckerBar: React.FC<FitCheckerBarProps> = ({
             <Clock size={14} aria-hidden="true" />
             <span>Start Time</span>
           </label>
-          <input
+          <TimePicker
             id="fit-start-time"
-            type="time"
-            className="fit-checker-input"
             value={params.startTime}
-            onChange={(e) => onChange({ ...params, startTime: e.target.value })}
-            aria-label="Event start time"
+            onChange={(startTime) => onChange({ ...params, startTime })}
+            ariaLabel="Event start time"
           />
         </div>
 
@@ -130,13 +129,12 @@ export const FitCheckerBar: React.FC<FitCheckerBarProps> = ({
             <Clock size={14} aria-hidden="true" />
             <span>End Time</span>
           </label>
-          <input
+          <TimePicker
             id="fit-end-time"
-            type="time"
-            className="fit-checker-input"
             value={params.endTime}
-            onChange={(e) => onChange({ ...params, endTime: e.target.value })}
-            aria-label="Event end time"
+            referenceStartTime={params.startTime}
+            onChange={(endTime) => onChange({ ...params, endTime })}
+            ariaLabel="Event end time"
           />
         </div>
 

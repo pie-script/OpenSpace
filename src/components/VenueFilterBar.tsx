@@ -2,6 +2,7 @@ import React from 'react';
 import type { VenueFilterState } from '../types';
 import { COMMON_FACILITIES, getActiveFilterCount } from '../utils/filterVenues';
 import { Filter, Calendar, Users, SlidersHorizontal, RotateCcw, Tag } from 'lucide-react';
+import { DatePicker } from './ui/DatePicker';
 
 interface VenueFilterBarProps {
   filters: VenueFilterState;
@@ -75,13 +76,13 @@ export const VenueFilterBar: React.FC<VenueFilterBarProps> = ({
             <Calendar size={15} aria-hidden="true" />
             <span>Target Date</span>
           </label>
-          <input
+          <DatePicker
             id="filter-date"
-            type="date"
-            className="filter-input"
             value={filters.date}
-            onChange={(e) => onFilterChange({ ...filters, date: e.target.value })}
-            aria-label="Filter by date"
+            onChange={(date) => onFilterChange({ ...filters, date })}
+            ariaLabel="Filter by target date"
+            placeholder="All Dates"
+            allowClear={true}
           />
         </div>
 
