@@ -55,7 +55,7 @@ export const Layout: React.FC<LayoutProps> = ({
       </main>
 
       {/* Accessible Footer */}
-      <Footer onNavigate={onNavigate} onResetData={onResetData} />
+      <Footer onNavigate={onNavigate} onResetData={onResetData} currentRole={currentRole} />
     </div>
   );
 };

@@ -55,27 +55,49 @@ export const HomePage: React.FC<HomePageProps> = ({
             </p>
 
             <div className="hero-actions">
-              <button
-                type="button"
-                className="btn-primary btn-lg"
-                onClick={() => onNavigate('venues')}
-              >
-                <Compass size={18} aria-hidden="true" />
-                <span>Browse Available Venues</span>
-                <ArrowRight size={18} aria-hidden="true" />
-              </button>
+              {currentRole === 'organizer' ? (
+                <>
+                  <button
+                    type="button"
+                    className="btn-primary btn-lg"
+                    onClick={() => onNavigate('venues')}
+                  >
+                    <Compass size={18} aria-hidden="true" />
+                    <span>Browse Available Venues</span>
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </button>
 
-              <button
-                type="button"
-                className="btn-secondary btn-lg"
-                onClick={() => {
-                  onRoleChange('staff');
-                  onNavigate('staff');
-                }}
-              >
-                <Shield size={18} aria-hidden="true" />
-                <span>Staff Management Portal</span>
-              </button>
+                  <button
+                    type="button"
+                    className="btn-secondary btn-lg"
+                    onClick={() => onRoleChange('staff')}
+                  >
+                    <Shield size={18} aria-hidden="true" />
+                    <span>Switch to Staff Management Portal</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="btn-primary btn-lg"
+                    onClick={() => onNavigate('staff')}
+                  >
+                    <Shield size={18} aria-hidden="true" />
+                    <span>Staff Management Dashboard</span>
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-secondary btn-lg"
+                    onClick={() => onRoleChange('organizer')}
+                  >
+                    <Compass size={18} aria-hidden="true" />
+                    <span>Switch to Browse Venues</span>
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="hero-stats">

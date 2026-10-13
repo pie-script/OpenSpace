@@ -1,13 +1,14 @@
 import React from 'react';
-import type { PageView } from '../types';
+import type { PageView, Role } from '../types';
 import { School, RotateCcw, ShieldCheck, HeartHandshake } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (page: PageView) => void;
   onResetData: () => void;
+  currentRole?: Role;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate, onResetData }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigate, onResetData, currentRole }) => {
   return (
     <footer className="footer">
       <div className="footer__container">
@@ -45,24 +46,28 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onResetData }) => {
                   Home Overview
                 </button>
               </li>
-              <li>
-                <button
-                  type="button"
-                  className="footer__link-btn"
-                  onClick={() => onNavigate('venues')}
-                >
-                  Browse Venues
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  className="footer__link-btn"
-                  onClick={() => onNavigate('staff')}
-                >
-                  Staff Management Portal
-                </button>
-              </li>
+              {currentRole !== 'staff' && (
+                <li>
+                  <button
+                    type="button"
+                    className="footer__link-btn"
+                    onClick={() => onNavigate('venues')}
+                  >
+                    Browse Venues
+                  </button>
+                </li>
+              )}
+              {currentRole !== 'organizer' && (
+                <li>
+                  <button
+                    type="button"
+                    className="footer__link-btn"
+                    onClick={() => onNavigate('staff')}
+                  >
+                    Staff Management Portal
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 

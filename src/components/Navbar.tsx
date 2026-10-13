@@ -65,25 +65,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Home
           </button>
-          <button
-            type="button"
-            className={`nav-link ${currentPage === 'venues' ? 'nav-link--active' : ''}`}
-            onClick={() => handleNavClick('venues')}
-            aria-current={currentPage === 'venues' ? 'page' : undefined}
-          >
-            <Compass size={16} aria-hidden="true" />
-            <span>Browse Venues</span>
-          </button>
-          <button
-            type="button"
-            className={`nav-link ${currentPage === 'staff' ? 'nav-link--active' : ''}`}
-            onClick={() => handleNavClick('staff')}
-            aria-current={currentPage === 'staff' ? 'page' : undefined}
-          >
-            <Shield size={16} aria-hidden="true" />
-            <span>Staff Dashboard</span>
-            {currentRole === 'staff' && <span className="nav-link__badge">Active</span>}
-          </button>
+          {currentRole === 'organizer' && (
+            <button
+              type="button"
+              className={`nav-link ${currentPage === 'venues' ? 'nav-link--active' : ''}`}
+              onClick={() => handleNavClick('venues')}
+              aria-current={currentPage === 'venues' ? 'page' : undefined}
+            >
+              <Compass size={16} aria-hidden="true" />
+              <span>Browse Venues</span>
+            </button>
+          )}
+          {currentRole === 'staff' && (
+            <button
+              type="button"
+              className={`nav-link ${currentPage === 'staff' ? 'nav-link--active' : ''}`}
+              onClick={() => handleNavClick('staff')}
+              aria-current={currentPage === 'staff' ? 'page' : undefined}
+            >
+              <Shield size={16} aria-hidden="true" />
+              <span>Staff Dashboard</span>
+              <span className="nav-link__badge">Active</span>
+            </button>
+          )}
         </nav>
 
         {/* Desktop Actions */}
@@ -141,23 +145,27 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               Home
             </button>
-            <button
-              type="button"
-              className={`mobile-nav-link ${currentPage === 'venues' ? 'mobile-nav-link--active' : ''}`}
-              onClick={() => handleNavClick('venues')}
-            >
-              <Compass size={18} aria-hidden="true" />
-              <span>Browse Venues</span>
-            </button>
-            <button
-              type="button"
-              className={`mobile-nav-link ${currentPage === 'staff' ? 'mobile-nav-link--active' : ''}`}
-              onClick={() => handleNavClick('staff')}
-            >
-              <Shield size={18} aria-hidden="true" />
-              <span>Staff Dashboard</span>
-              {currentRole === 'staff' && <span className="nav-link__badge">Active</span>}
-            </button>
+            {currentRole === 'organizer' && (
+              <button
+                type="button"
+                className={`mobile-nav-link ${currentPage === 'venues' ? 'mobile-nav-link--active' : ''}`}
+                onClick={() => handleNavClick('venues')}
+              >
+                <Compass size={18} aria-hidden="true" />
+                <span>Browse Venues</span>
+              </button>
+            )}
+            {currentRole === 'staff' && (
+              <button
+                type="button"
+                className={`mobile-nav-link ${currentPage === 'staff' ? 'mobile-nav-link--active' : ''}`}
+                onClick={() => handleNavClick('staff')}
+              >
+                <Shield size={18} aria-hidden="true" />
+                <span>Staff Dashboard</span>
+                <span className="nav-link__badge">Active</span>
+              </button>
+            )}
           </nav>
 
           <div className="mobile-role-section">

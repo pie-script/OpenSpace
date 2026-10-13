@@ -36,18 +36,24 @@ describe('App Navigation and Shell Integration', () => {
     expect(screen.getByText(/6 of 6 spaces matching/i)).toBeInTheDocument();
   });
 
-  it('navigates to Staff Dashboard from the main navigation', async () => {
+  it('navigates to Staff Dashboard when clicking Institution Staff role', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
-    const staffNavBtn = within(nav).getByRole('button', { name: /staff dashboard/i });
-    await user.click(staffNavBtn);
+    expect(within(nav).getByRole('button', { name: /browse venues/i })).toBeInTheDocument();
+    expect(within(nav).queryByRole('button', { name: /staff dashboard/i })).not.toBeInTheDocument();
+
+    const staffRoleBtn = screen.getByRole('button', { name: /switch to institution staff role/i });
+    await user.click(staffRoleBtn);
 
     expect(
       screen.getByRole('heading', { name: /institution staff dashboard/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/managed campus facilities/i)).toBeInTheDocument();
+
+    expect(within(nav).getByRole('button', { name: /staff dashboard/i })).toBeInTheDocument();
+    expect(within(nav).queryByRole('button', { name: /browse venues/i })).not.toBeInTheDocument();
   });
 
   it('navigates to Venues from the Hero CTA button', async () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type {
   PageView,
   Role,
@@ -68,17 +68,28 @@ export function App() {
   }, []);
 
   const handleNavigate = (page: PageView) => {
-    if (page === 'venue-detail') {
+    let targetPage = page;
+    if (currentRole === 'organizer' && page === 'staff') {
+      targetPage = 'venues';
+    } else if (currentRole === 'staff' && (page === 'venues' || page === 'venue-detail')) {
+      targetPage = 'staff';
+    }
+
+    if (targetPage === 'venue-detail') {
       setRouteState((prev) => ({ ...prev, page: 'venue-detail' }));
       return;
     }
-    setRouteState({ page, venueId: null });
+    setRouteState({ page: targetPage, venueId: null });
     if (typeof window !== 'undefined') {
-      window.location.hash = page;
+      window.location.hash = targetPage;
     }
   };
 
   const handleSelectVenue = (venueId: string) => {
+    if (currentRole === 'staff') {
+      handleNavigate('staff');
+      return;
+    }
     setRouteState({ page: 'venue-detail', venueId });
     if (typeof window !== 'undefined') {
       window.location.hash = `venue-detail:${venueId}`;
@@ -102,14 +113,16 @@ export function App() {
     showToast('Event parameters reset to default.');
   };
 
-  // Sync role changes to persistent storage
+  // Sync role changes to persistent storage and navigate to corresponding portal
   const handleRoleChange = (newRole: Role) => {
     setCurrentRole(newRole);
     saveStoredRole(newRole);
+    const targetPage = newRole === 'staff' ? 'staff' : 'venues';
+    setRouteState({ page: targetPage, venueId: null });
     showToast(
       newRole === 'organizer'
-        ? 'Switched to Organizer role. You can explore venues and test fit checks.'
-        : 'Switched to Institution Staff role. You can manage facilities and approve requests.'
+        ? 'Switched to Organizer role. Viewing available venues and booking tools.'
+        : 'Switched to Institution Staff role. Viewing Staff Dashboard and venue management.'
     );
   };
 
@@ -288,6 +301,12 @@ export function App() {
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
+  const effectivePage: PageView = useMemo(() => {
+    if (currentRole === 'organizer' && routeState.page === 'staff') return 'venues';
+    if (currentRole === 'staff' && (routeState.page === 'venues' || routeState.page === 'venue-detail')) return 'staff';
+    return routeState.page;
+  }, [currentRole, routeState.page]);
+
   const selectedVenue = routeState.venueId
     ? venues.find((v) => v.id === routeState.venueId)
     : undefined;
@@ -301,7 +320,7 @@ export function App() {
 
       {/* Main Layout Shell */}
       <Layout
-        currentPage={routeState.page}
+        currentPage={effectivePage}
         onNavigate={handleNavigate}
         currentRole={currentRole}
         onRoleChange={handleRoleChange}
@@ -312,7 +331,7 @@ export function App() {
         onClearNotifications={handleClearNotifications}
         onSelectNotification={handleSelectNotification}
       >
-        {routeState.page === 'home' && (
+        {effectivePage === 'home' && (
           <HomePage
             venues={venues}
             onNavigate={handleNavigate}
@@ -322,7 +341,7 @@ export function App() {
           />
         )}
 
-        {routeState.page === 'venues' && (
+        {effectivePage === 'venues' && (
           <VenuesPage
             venues={venues}
             currentRole={currentRole}
@@ -336,7 +355,7 @@ export function App() {
           />
         )}
 
-        {routeState.page === 'venue-detail' && (
+        {effectivePage === 'venue-detail' && (
           <VenueDetailPage
             venue={selectedVenue}
             currentRole={currentRole}
@@ -349,7 +368,7 @@ export function App() {
           />
         )}
 
-        {routeState.page === 'staff' && (
+        {effectivePage === 'staff' && (
           <StaffDashboardPage
             venues={venues}
             requests={requests}
