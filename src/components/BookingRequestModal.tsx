@@ -318,8 +318,8 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
           </div>
         ) : (
           /* Booking Submission Form */
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="modal-body">
+          <form onSubmit={handleSubmit} noValidate className="modal-form">
+            <div className="modal-body modal-body--booking">
               {/* Event Parameter Summary Strip */}
               <div className="booking-review-strip" aria-label="Selected event parameters">
                 <div className="review-stat">
