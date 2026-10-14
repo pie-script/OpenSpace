@@ -3,11 +3,19 @@
 > **Built for Next Byte Hacks V5**  
 > A civic tech platform unlocking dark school, university, and library spaces for evening and weekend community use — with real-time policy evaluation, schedule conflict prevention, weekly calendar timelines, and recurring permits.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Netlify-00C7B7?style=flat&logo=netlify)](https://openspace.netlify.app)
 [![Tests](https://img.shields.io/badge/Tests-100%20passed-emerald)](https://github.com/pie-script/OpenSpace)
 [![Lint](https://img.shields.io/badge/Oxlint-0%20errors-brightgreen)](https://github.com/pie-script/OpenSpace)
 [![React](https://img.shields.io/badge/React-19.0-blue)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-8.3-purple)](https://vitejs.dev)
+
+🌐 **Live Deployment:** [https://openspace.netlify.app](https://openspace.netlify.app)  
+📦 **GitHub Repository:** [https://github.com/pie-script/OpenSpace](https://github.com/pie-script/OpenSpace)
+
+---
+
+![OpenSpace Banner](screenshots/00_project_thumbnail_minimal.jpg)
 
 ---
 
@@ -31,7 +39,7 @@ Every evening and weekend, tens of thousands of publicly funded classrooms, audi
 ### 2. ⚖️ Rule Fit Evaluation Engine
 - Pre-submission compliance checks evaluating proposed events against individual facility policies.
 - Instant feedback on **operating hours, permitted event types, max attendance, sound levels, and custodial supervision requirements**.
-- Clear diagnostic warnings showing why an event does or does not fit a space before any paperwork is filed.
+- Clear diagnostic warnings and automatic request blocking when proposed hours or attendance violate campus rules before any paperwork is filed.
 
 ### 3. 🛡️ Booking Request Lifecycle & Conflict Prevention
 - Complete status workflow: **Pending ➔ Approved ➔ Declined ➔ Cancelled**.
@@ -42,12 +50,12 @@ Every evening and weekend, tens of thousands of publicly funded classrooms, audi
 - Visual 7-day Monday–Sunday timeline grid mapped from **08:00 to 22:00**.
 - Color-coded event blocks (**Approved** in emerald, **Pending** in amber, **Conflict** in pulsing red).
 - Facility selector dropdown and quick navigation buttons (`Previous Week`, `Next Week`, and `Demo Week`).
-- Interactive event card popover displaying organizer details, attendance, noise levels, and inline staff approval controls.
+- Interactive event card popovers displaying organizer details, attendance, noise levels, and inline staff approval controls.
 
 ### 5. 🔁 Recurring Series & Batch Conflict Checking
 - Request multi-week recurring bookings (**Weekly** or **Bi-weekly** for 2–8 sessions).
 - Automated batch conflict detection evaluating every single session date across month boundaries.
-- Live series availability preview showing open vs conflicting dates.
+- Compact series availability preview showing open vs conflicting dates.
 - Shared `seriesId` tracking across the platform (e.g. `Series (1 of 4)` badges).
 
 ### 6. 🔔 In-App Notification Center
@@ -65,19 +73,56 @@ Every evening and weekend, tens of thousands of publicly funded classrooms, audi
 
 ---
 
-## 📸 Screenshots
+## 📸 Screenshots & Product Walkthrough
 
-| Home Page & Mission | Facility Directory & Filters |
+### 1. Home Page & Community Mission
+The modern landing page explaining OpenSpace's mission to unlock after-hours educational spaces with transparent public rates and automated safety compliance.
+
+![Home Page](screenshots/Home_Page.png)
+
+---
+
+### 2. Browse Available Spaces & Policy Fit Evaluator
+Organizers can enter their proposed event parameters (date, time, attendance, noise) to immediately see which campus facilities are compatible before submitting.
+
+![Browse Venues Policy Fit](screenshots/Venues_1.png)
+
+---
+
+### 3. Multi-Attribute Catalog & Amenities Search
+Filter campus venues by facility type, hourly rate, and specialized equipment such as acoustic paneling, stage lighting, and athletic courts.
+
+![Browse Venues Catalog](screenshots/Venues_2.png)
+
+---
+
+### 4. Facility Space Details & Operating Policies
+Inspect verified after-hours operating windows, custodial care rules, security deposit requirements, and weekly calendar availability.
+
+![Venue Details](screenshots/Details_Venue.png)
+
+---
+
+### 5. Automated Rule Fit Engine Diagnostics
+When event parameters exceed operating curfews or attendance limits, the Rule Fit Engine immediately flags the violation and blocks invalid submissions.
+
+![Rule Fit Incompatibility](screenshots/Rule_Fit_Blocked.png)
+
+---
+
+### 6. Bounded Booking Modal with Recurrence & Conflict Check
+A clean, scrollable modal dialog with pinned action footer, allowing single or multi-week recurring reservations with live batch conflict checking.
+
+| Single / Recurring Selection | Form Details & Submission |
 |:---:|:---:|
-| ![Home Page](screenshots/01_home_page.png) | ![Browse Venues](screenshots/02_browse_venues_catalog.png) |
+| ![Booking Modal](screenshots/Booking.png) | ![Fill Details](screenshots/Fill_up_Details.png) |
 
-| Facility Detail & Policy Fit | Booking Request Modal |
-|:---:|:---:|
-| ![Venue Detail & Fit Check](screenshots/03_venue_detail_and_fit_check.png) | ![Booking Modal](screenshots/04_booking_modal.png) |
+---
 
-| Staff Administrative Dashboard |
-|:---:|
-| ![Staff Dashboard](screenshots/05_staff_dashboard.png) |
+### 7. Institution Staff Dashboard & Lifecycle Management
+School administrators get real-time operational KPI metrics, conflict alerts, and a centralized table to review, approve, or decline bookings with custodial notes.
+
+![Admin Dashboard](screenshots/Admin_dashboard.png)
 
 ---
 
@@ -86,6 +131,7 @@ Every evening and weekend, tens of thousands of publicly funded classrooms, audi
 - **Frontend**: React 19, TypeScript (`verbatimModuleSyntax: true`), Vite 8
 - **Styling**: Vanilla CSS Design System with curated tokens, responsive Grid/Flexbox, dark/light contrast compliance, and print styling
 - **Icons**: Lucide React
+- **Hosting & Deployment**: Netlify with SPA redirect rules (`/* /index.html 200`)
 - **State & Storage**: Isolated browser local storage service with in-memory fallbacks and demo seed data
 - **Testing**: Vitest, React Testing Library, JSDOM (**100 tests passing across 15 test suites**)
 - **Code Quality**: Oxlint (0 errors, 0 warnings across 44 files)
@@ -146,4 +192,5 @@ npm run build
 
 - **Hackathon**: Next Byte Hacks V5
 - **Track**: Open Innovation / Social Good / Web Applications
+- **Live Demo**: [https://openspace.netlify.app](https://openspace.netlify.app)
 - **Devpost Submission Guide**: See [`DEVPOST_SUBMISSION.md`](DEVPOST_SUBMISSION.md) for complete submission text, video script, and challenge reflections.

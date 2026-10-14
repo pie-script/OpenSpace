@@ -8,6 +8,7 @@ This document contains everything you need to copy and paste directly into your 
 
 - **Project Title:** OpenSpace
 - **Tagline:** Unlocking after-hours school and civic spaces for community use with smart policy evaluation, conflict prevention, and weekly calendar timelines.
+- **Live Deployment:** `https://openspace.netlify.app`
 - **GitHub Repository:** `https://github.com/pie-script/OpenSpace`
 - **Track / Category:** Social Good / Open Innovation / Web Apps
 - **Built With:** `React 19`, `TypeScript`, `Vite`, `Vanilla CSS`, `Vitest`, `Lucide React`, `Testing Library`, `Oxlint`
@@ -111,9 +112,13 @@ Use this script to record your demo video (e.g. using Loom, OBS, or Zoom screen 
 
 ## 🖼️ Screenshots to Upload on Devpost
 
-Attach the following images located in the [`screenshots/`](screenshots/) directory:
-1. `screenshots/01_home_page.png` — Hero landing page and community journey
-2. `screenshots/02_browse_venues_catalog.png` — Venue catalog and multi-filters
-3. `screenshots/03_venue_detail_and_fit_check.png` — Venue detail and Rule Fit Checker
-4. `screenshots/04_booking_modal.png` — Booking request modal with recurrence options
-5. `screenshots/05_staff_dashboard.png` — Staff approval dashboard with stats and metrics
+Attach the following updated images located in the [`screenshots/`](screenshots/) directory:
+1. `screenshots/00_project_thumbnail_minimal.jpg` — Project thumbnail banner
+2. `screenshots/Home_Page.png` — Hero landing page and community journey
+3. `screenshots/Venues_1.png` — Venue catalog with Campus Policy & Rule Fit Evaluator
+4. `screenshots/Venues_2.png` — Multi-attribute catalog filters and facility amenities
+5. `screenshots/Details_Venue.png` — Venue detail page with operating hours and pricing
+6. `screenshots/Rule_Fit_Blocked.png` — Rule Fit Engine diagnostic blocking
+7. `screenshots/Booking.png` — Booking request modal with recurrence options
+8. `screenshots/Fill_up_Details.png` — Form validation with supervisor notes and contact details
+9. `screenshots/Admin_dashboard.png` — Staff approval dashboard with KPI metrics and lifecycle actions
