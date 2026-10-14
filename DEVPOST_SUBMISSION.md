@@ -8,7 +8,7 @@ This document contains everything you need to copy and paste directly into your 
 
 - **Project Title:** OpenSpace
 - **Tagline:** Unlocking after-hours school and civic spaces for community use with smart policy evaluation, conflict prevention, and weekly calendar timelines.
-- **Live Deployment:** `https://openspace.netlify.app`
+- **Live Deployment:** `https://0penspace.netlify.app`
 - **GitHub Repository:** `https://github.com/pie-script/OpenSpace`
 - **Track / Category:** Social Good / Open Innovation / Web Apps
 - **Built With:** `React 19`, `TypeScript`, `Vite`, `Vanilla CSS`, `Vitest`, `Lucide React`, `Testing Library`, `Oxlint`

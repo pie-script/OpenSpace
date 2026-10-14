@@ -3,14 +3,14 @@
 > **Built for Next Byte Hacks V5**  
 > A civic tech platform unlocking dark school, university, and library spaces for evening and weekend community use — with real-time policy evaluation, schedule conflict prevention, weekly calendar timelines, and recurring permits.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Netlify-00C7B7?style=flat&logo=netlify)](https://openspace.netlify.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Netlify-00C7B7?style=flat&logo=netlify)](https://0penspace.netlify.app)
 [![Tests](https://img.shields.io/badge/Tests-100%20passed-emerald)](https://github.com/pie-script/OpenSpace)
 [![Lint](https://img.shields.io/badge/Oxlint-0%20errors-brightgreen)](https://github.com/pie-script/OpenSpace)
 [![React](https://img.shields.io/badge/React-19.0-blue)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-8.3-purple)](https://vitejs.dev)
 
-🌐 **Live Deployment:** [https://openspace.netlify.app](https://openspace.netlify.app)  
+🌐 **Live Deployment:** [https://0penspace.netlify.app](https://0penspace.netlify.app)  
 📦 **GitHub Repository:** [https://github.com/pie-script/OpenSpace](https://github.com/pie-script/OpenSpace)
 
 ---
@@ -192,5 +192,5 @@ npm run build
 
 - **Hackathon**: Next Byte Hacks V5
 - **Track**: Open Innovation / Social Good / Web Applications
-- **Live Demo**: [https://openspace.netlify.app](https://openspace.netlify.app)
+- **Live Demo**: [https://0penspace.netlify.app](https://0penspace.netlify.app)
 - **Devpost Submission Guide**: See [`DEVPOST_SUBMISSION.md`](DEVPOST_SUBMISSION.md) for complete submission text, video script, and challenge reflections.
